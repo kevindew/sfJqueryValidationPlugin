@@ -1,0 +1,3 @@
+default:
+  enabled: on
+  with_layout: true

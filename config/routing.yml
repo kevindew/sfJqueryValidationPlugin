@@ -1,0 +1,5 @@
+sfJqueryValidation:
+  url:  /jquery-validation/*
+  param:
+    module: sfJqueryValidation
+    action: index
