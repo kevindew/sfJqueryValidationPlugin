@@ -1,5 +1,5 @@
 sfJqueryValidation:
-  url:  /jquery-validation/*
+  url:  /jquery-validation/:form/:name_format/:id_format/*
   param:
     module: sfJqueryValidation
     action: index

@@ -30,9 +30,27 @@ class BasesfJqueryValidationActions extends sfActions
   /**
    * @see sfActions::execute
    */
-  public function executeIndex()
+  public function executeIndex(sfWebRequest $request)
   {
+    $reflection = new ReflectionClass($request->getParameter('form'));
 
-    $this->assets = "Console.log('test')";
+    if (!$reflection->implementsInterface('sfFormJqueryValidationInterface'))
+    {
+      throw new Exception('Requested class does not implement interface');
+    }
+
+    $form = $reflection->newInstance();
+
+    if (!$form instanceof sfForm)
+    {
+      throw new Exception('Requested class does not inherit from sfForm');
+    }
+
+    $form->getWidgetSchema()->setNameFormat($request->getParameter('name_format'));
+    $form->getWidgetSchema()->setIdFormat($request->getParameter('id_format'));
+
+    $javascript = $form->getJqueryValidationGenerator()->generateJavascript();
+
+    return $this->renderText($javascript);
   }
 }

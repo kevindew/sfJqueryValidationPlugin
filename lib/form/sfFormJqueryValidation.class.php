@@ -65,6 +65,9 @@ implements sfFormJqueryValidationInterface
     $this->setUseJqueryValidation(
       sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_by_default')
     );
+
+    $this->setJqueryValidationGenerator(new sfJqueryValidationGenerator($this));
+    
   }
 
   /**
@@ -291,19 +294,18 @@ implements sfFormJqueryValidationInterface
 
     $this->rewind();
 
-    var_dump(
-      $this->getWidgetSchema()->getNameFormat(),
-      $this->getWidgetSchema()->getIdFormat(),
-      $this->current()->renderId()
-    );
-
     return url_for(
       '@'
       . sfConfig::get(
         'app_sfJqueryValidationPlugin_route', 'sfJqueryValidation'
       )
       . '?form=' . get_class($this)
-      . '&id-format=' . $this->getWidgetSchema()->getNameFormat()
+      . '&name_format=' . $this->getWidgetSchema()->getNameFormat()
+      . '&id_format=' . $this->getWidgetSchema()->getIdFormat()
+      . (sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
+        ? '&asset-version=' . sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
+        : ''
+      )
     );
   }
 
@@ -336,6 +338,26 @@ implements sfFormJqueryValidationInterface
   public function setUseJqueryValidation($useJqueryValidation)
   {
     $this->useJqueryValidation = $useJqueryValidation;
+    return $this;
+  }
+
+  /**
+   * @return  sfJqueryValidation|null
+   */
+  public function getJqueryValidationGenerator()
+  {
+    return $this->jqueryValidationGenerator;
+  }
+
+  /**
+   * @param   sfJqueryValidationGenerator $jqueryValidationGenerator
+   * @return  self
+   */
+  public function setJqueryValidationGenerator(
+    sfJqueryValidationGenerator $jqueryValidationGenerator
+  )
+  {
+    $this->jqueryValidationGenerator = $jqueryValidationGenerator;
     return $this;
   }
 }
