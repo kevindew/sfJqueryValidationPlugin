@@ -31,6 +31,12 @@ class sfJqueryValidationGenerator
    */
   protected $_fieldForId;
 
+  /**
+   * Extra javascript set for this instance
+   *
+   * @var string
+   */
+  protected $_userJavascript = '';
 
   /**
    * @param sfFormJqueryValidationInterface $form
@@ -92,7 +98,9 @@ class sfJqueryValidationGenerator
     return <<<EOF
 (function($) {
   $(document).ready(function() {
-    $('#%form_accessor_id%').parents('form').first().validate({});
+    var validator = $('#%form_accessor_id%').parents('form').first().validate({});
+
+%user_script%
   });
 })(jQuery);
 EOF;
@@ -109,7 +117,8 @@ EOF;
     $script = strtr(
       $this->getScriptTemplate(),
       array(
-        '%form_accessor_id%' => $this->_getFormAccessorId()
+        '%form_accessor_id%' => addcslashes($this->_getFormAccessorId(), "'"),
+        '%user_script%' => $this->getUserJavascript()
       )
     );
 
@@ -133,6 +142,27 @@ EOF;
   public function setFieldForId($fieldForId)
   {
     $this->_fieldForId = $fieldForId;
+
+    return $this;
+  }
+
+  /**
+   * @see     self::_userJavascript
+   * @return  string
+   */
+  public function getUserjavascript()
+  {
+    return $this->_userJavascript;
+  }
+
+  /**
+   * @see     self::_userJavascript
+   * @param   $userJavascript string
+   * @return  self
+   */
+  public function setUserJavascript($userJavascript)
+  {
+    $this->_userJavascript = $userJavascript;
 
     return $this;
   }
