@@ -5,7 +5,6 @@
  * @package     sfJqueryValidationPlugin
  * @subpackage  formSchemaFormatter
  * @author      Kevin Dew <kev@dewsolutions.co.uk>
- * @version     SVN: $Id: sfWidgetFormSchemaFormatterJqueryValidation.class.php 66 2010-07-26 22:26:13Z kevin $
  */
 class sfWidgetFormSchemaFormatterJqueryValidation
 extends sfWidgetFormSchemaFormatter
