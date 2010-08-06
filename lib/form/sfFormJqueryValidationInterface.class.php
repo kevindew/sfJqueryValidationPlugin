@@ -18,10 +18,6 @@ interface sfFormJqueryValidationInterface
 
   public function setUseValidClassOnEmptyFields($useValidClassOnEmptyFields);
 
-  public function getJqueryValidationScriptPath();
-
-  public function setJqueryValidationScriptPath($jqueryValidationScriptPath);
-
   public function getValidationScriptPath();
 
   public function getUseJqueryValidation();

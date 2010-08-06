@@ -7,8 +7,8 @@
  * @author      Kevin Dew <kev@dewsolutions.co.uk>
  */
 class sfWidgetFormSchemaFormatterJqueryValidation
-extends sfWidgetFormSchemaFormatter
-implements sfWidgetFormSchemaFormatterJqueryValidationInterface
+  extends sfWidgetFormSchemaFormatter
+  implements sfWidgetFormSchemaFormatterJqueryValidationInterface
 {
   protected
     $rowFormat             = "<div class=\"form-row%row_class%\">
@@ -26,6 +26,8 @@ implements sfWidgetFormSchemaFormatterJqueryValidationInterface
                               %errors%</div>",
     $helpFormat            = '<div class="form-help">%help%</div>',
     $errorListFormatInARow = "<ul class=\"form-errors\">\n%errors%</ul>\n",
+    $errorRowFormatInARow      = "    <li class=\"error\">%error%</li>\n",
+    $namedErrorRowFormatInARow = "    <li class=\"error\">%name%: %error%</li>\n",
     $rowErrorClass         = 'form-row-error',
     $requiredFormat        = '<span class="req">*</span>',
     $decoratorFormat       = "<div class=\"form-decorator\">\n%content%</div>",
@@ -33,7 +35,9 @@ implements sfWidgetFormSchemaFormatterJqueryValidationInterface
     $markRequired          = true,
     $globalErrorFormat     = "<div class=\"global-error\">\n%error%\n</div>",
     $fieldErrorClass       = 'error',
-    $fieldValidClass       = 'valid'
+    $fieldValidClass       = 'valid',
+    $jqueryValidationErrorElement = 'li',
+    $jqueryValidationWrapper = 'ul.form-errors'
   ;
 
   /**
@@ -235,5 +239,27 @@ implements sfWidgetFormSchemaFormatterJqueryValidationInterface
   public function getFieldValidClass()
   {
     return $this->fieldValidClass;
+  }
+
+  public function setJqueryValidationErrorElement($jqueryValidationErrorElement)
+  {
+    $this->jqueryValidationErrorElement = $jqueryValidationErrorElement;
+    return $this;
+  }
+
+  public function getJqueryValidationErrorElement()
+  {
+    return $this->jqueryValidationErrorElement;
+  }
+
+  public function setJqueryValidationWrapper($jqueryValidationWrapper)
+  {
+    $this->jqueryValidationWrapper = $jqueryValidationWrapper;
+    return $this;
+  }
+
+  public function getJqueryValidationWrapper()
+  {
+    return $this->jqueryValidationWrapper;
   }
 }

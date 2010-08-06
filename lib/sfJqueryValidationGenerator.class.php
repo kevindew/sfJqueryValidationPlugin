@@ -61,6 +61,20 @@ class sfJqueryValidationGenerator
   protected $_options = array();
 
   /**
+   * An array of javascripts
+   *
+   * @var array
+   */
+  protected $_javascripts = array();
+
+  /**
+   * An array of stylesheets
+   *
+   * @var array
+   */
+  protected $_stylesheets = array();
+
+  /**
    *
    * @param sfFormJqueryValidationInterface $form
    * @param array                           $options options for jQuery Validation
@@ -71,8 +85,22 @@ class sfJqueryValidationGenerator
   )
   {
     $this->setForm($form);
+
+    // set validator script
+    if (sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_script'))
+    {
+      $this->setJavascripts(array_merge(
+        $this->getJavascripts(),
+        array(
+          sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_script')
+        )
+      ));
+    }
+
     $this->setScriptTemplate($this->getDefaultScriptTemplate());
-    $this->setOptions(array_merge($this->getDefaultOptions(), $options));
+    $this->setOptions($this->getDefaultOptions());
+    $this->setOptionsFromFormFormatter();
+    $this->mergeOptions($options);
   }
 
   /**
@@ -270,13 +298,18 @@ EOF;
    *
    * @return  void
    */
-  public function generateRules()
+  public function generateRules($reset = false)
   {
-    $this->_rules = array();
+    if (!$reset)
+    {
+      $this->_rules = array();
+    }
+
 
     $this->_recursiveGenerateFieldsAndValidator(
       $this->getForm()->getFormFieldSchema(),
-      $this->getForm()->getValidatorSchema()
+      $this->getForm()->getValidatorSchema(),
+      $reset
     );
 
     $this->setRulesGenerated(true);
@@ -295,7 +328,8 @@ EOF;
    */
   protected function _recursiveGenerateFieldsAndValidator(
     sfFormFieldSchema $formFieldSchema,
-    sfValidatorSchema $validatorSchema
+    sfValidatorSchema $validatorSchema,
+    $reset = false
   )
   {
     foreach($formFieldSchema as $name => $field)
@@ -314,7 +348,8 @@ EOF;
 
         return $this->_recursiveGenerateFieldsAndValidator(
           $field,
-          $validatorSchema[$name]
+          $validatorSchema[$name],
+          $reset
         );
       }
 
@@ -334,8 +369,25 @@ EOF;
       );
       $parser = $factory->getParser();
 
-      $this->setFieldRules(
-        $field->renderName(), $parser->getRules()
+      if ($reset)
+      {
+        $this->setFieldRules(
+          $field->renderName(), $parser->getRules()
+        );
+      }
+      else
+      {
+        $this->mergeFieldRules(
+          $field->renderName(), $parser->getRules()
+        );
+      }
+
+      $this->setJavascripts(
+        array_merge($this->getJavascripts(), $parser->getJavascripts())
+      );
+
+      $this->setStylesheets(
+        array_merge($this->getStylesheets(), $parser->getStylesheets())
       );
     }
   }
@@ -455,6 +507,31 @@ EOF;
     $this->mergeFieldRules($fieldName, array($ruleName => $rule));
 
     return $this;
+  }
+
+  /**
+   * Get a rule for a field
+   *
+   * @param   string                          $fieldName
+   * @param   string                          $ruleName
+   *
+   * @return  sfJqueryValidationValidatorRule
+   */
+  public function getFieldRule($fieldName, $ruleName)
+  {
+    $fieldRules = $this->getFieldRules($fieldName);
+
+    if ($fieldRules === null)
+    {
+      throw new Exception('Field does not exist');
+    }
+
+    if (!isset($fieldRules[$ruleName]))
+    {
+      throw new Exception('Rule does not exist');
+    }
+
+    return $fieldRules[$ruleName];
   }
 
   /**
@@ -622,11 +699,24 @@ EOF;
    * Options are the ones jquery accept:
    * http://docs.jquery.com/Plugins/Validation/validate#toptions
    *
-   * @return  array
+   * @param   array $options
+   *
+   * @return  self
    */
   public function setOptions(array $options)
   {
     $this->_options = $options;
+    return $this;
+  }
+
+  /**
+   * @see     self::setOptions()
+   * @param   array $options
+   * @return  self
+   */
+  public function mergeOptions(array $options)
+  {
+    $this->setOptions(array_merge($this->getOptions(), $options));
     return $this;
   }
 
@@ -683,19 +773,82 @@ EOF;
   {
     $defaultOptions = array();
 
-    $defaultOptions['errorClass'] = '"'
+    return $defaultOptions;
+  }
+
+  public function setOptionsFromFormFormatter()
+  {
+    $options = array();
+
+    $options['errorClass'] = '"'
       . $this->getForm()->getWidgetSchema()->getFormFormatter()
           ->getFieldErrorClass()
       . '"'
     ;
 
-    $defaultOptions['validClass'] = '"'
+    $options['validClass'] = '"'
       . $this->getForm()->getWidgetSchema()->getFormFormatter()
           ->getFieldValidClass()
       . '"'
     ;
 
-    return $defaultOptions;
+    $options['errorElement'] = '"'
+      . $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationErrorElement()
+      . '"'
+    ;
+
+    $options['wrapper'] = '"'
+      . $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationWrapper()
+      . '"'
+    ;
+
+    return $this->mergeOptions($options);
+  }
+
+  /**
+   * Get an array of javascript paths
+   *
+   * @return  array
+   */
+  public function getJavascripts()
+  {
+    return $this->_javascripts;
+  }
+
+  /**
+   * Set an array of javascript paths
+   *
+   * @param   array   $javascripts
+   *
+   * @return  self
+   */
+  public function setJavascripts($javascripts)
+  {
+    $this->_javascripts = $javascripts;
+    return $this;
+  }
+
+  /**
+   * Get an array of stylesheet paths
+   *
+   * @return  array
+   */
+  public function getStylesheets()
+  {
+    return $this->_stylesheets;
+  }
+
+  /**
+   * Get an array of stylesheet paths
+   *
+   * @return  array
+   */
+  public function setStylesheets($stylesheets)
+  {
+    $this->_stylesheets = $stylesheets;
+    return $this;
   }
 
 }

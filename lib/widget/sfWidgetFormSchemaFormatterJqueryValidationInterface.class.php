@@ -23,4 +23,13 @@ interface sfWidgetFormSchemaFormatterJqueryValidationInterface
 //  public function setShowTopError($showTopError);
 //
 
+  public function setJqueryValidationErrorElement($jqueryValidationErrorElement);
+
+  public function getJqueryValidationErrorElement();
+
+  public function setJqueryValidationWrapper($jqueryValidationWrapper);
+
+  public function getJqueryValidationWrapper();
+
+
 }

@@ -18,11 +18,20 @@ class sfJqueryValidationParsersfValidatorString
 
     if ($this->getValidator()->hasOption('max_length'))
     {
+
       $this->addRule(
         'maxlength',
         new sfJqueryValidationValidatorRule(
-           $this->getValidator()->getOption('max_length'),
-           $this->getValidator()->getMessage('max_length')
+          $this->getValidator()->getOption('max_length'),
+          $this->generateMessageJsFunctionReplace(
+            $this->getValidator()->getMessage('max_length'),
+            array(
+              '%value%' => 'jQuery(element).val()',
+              '%max_length%' => 'ruleParams'
+            )
+          ),
+          sfJqueryValidationValidatorRule::STR_RAW,
+          sfJqueryValidationValidatorRule::STR_RAW
         )
       );
     }
@@ -32,8 +41,16 @@ class sfJqueryValidationParsersfValidatorString
       $this->addRule(
         'minlength',
         new sfJqueryValidationValidatorRule(
-           $this->getValidator()->getOption('min_length'),
-           $this->getValidator()->getMessage('min_length')
+          $this->getValidator()->getOption('min_length'),
+          $this->generateMessageJsFunctionReplace(
+            $this->getValidator()->getMessage('min_length'),
+            array(
+              '%value%' => 'jQuery(element).val()',
+              '%min_length%' => 'ruleParams'
+            )
+          ),
+          sfJqueryValidationValidatorRule::STR_RAW,
+          sfJqueryValidationValidatorRule::STR_RAW
         )
       );
     }

@@ -30,6 +30,20 @@ class sfJqueryValidationParsersfValidatorBase
   protected $_rules = array();
 
   /**
+   * An array of javascripts
+   *
+   * @var   array
+   */
+  protected $_javascripts = array();
+
+  /**
+   * An array of stylesheets
+   *
+   * @var   array
+   */
+  protected $_stylesheets = array();
+
+  /**
    * Builds a parser
    *
    * @param sfFormField $field
@@ -146,4 +160,87 @@ class sfJqueryValidationParsersfValidatorBase
       );
     }
   }
+
+  /**
+   *
+   */
+  public static function generateMessageJsFunctionReplace(
+    $message,
+    array $replace
+  )
+  {
+    $message = '"' . addcslashes($message, '"') . '"';
+
+    // see if theres actually any values to replace otherwise no need for a
+    // function
+    $match = false;
+    foreach (array_keys($replace) as $check)
+    {
+      if (strpos($message, $check) !== false)
+      {
+        $match = true;
+        break;
+      }
+    }
+
+    if (!$match)
+    {
+      return $message;
+    }
+
+    foreach($replace as $key => $value)
+    {
+      // add string concatentation
+      $replace[$key] = '" + ' . $value . ' + "';
+    }
+
+    $message = str_replace(array_keys($replace), $replace,$message);
+    
+    return 'function(ruleParams, element) {return ' . $message . ';}';
+  }
+
+  /**
+   * Get an array of javascript paths
+   *
+   * @return  array
+   */
+  public function getJavascripts()
+  {
+    return $this->_javascripts;
+  }
+
+  /**
+   * Set an array of javascript paths
+   *
+   * @param   array   $javascripts
+   *
+   * @return  self
+   */
+  public function setJavascripts($javascripts)
+  {
+    $this->_javascripts = $javascripts;
+    return $this;
+  }
+
+  /**
+   * Get an array of stylesheet paths
+   *
+   * @return  array
+   */
+  public function getStylesheets()
+  {
+    return $this->_stylesheets;
+  }
+
+  /**
+   * Get an array of stylesheet paths
+   *
+   * @return  array
+   */
+  public function setStylesheets($stylesheets)
+  {
+    $this->_stylesheets = $stylesheets;
+    return $this;
+  }
+  
 }

@@ -8,8 +8,8 @@
  * @author      Kevin Dew <kev@dewsolutions.co.uk>
  */
 class sfFormJqueryValidation
-extends sfFormSymfony
-implements sfFormJqueryValidationInterface
+  extends sfFormSymfony
+  implements sfFormJqueryValidationInterface
 {
 
   protected
@@ -21,24 +21,18 @@ implements sfFormJqueryValidationInterface
     $useFieldValidClassServerSide = true,
     // whether to show valid on empty fields
     $useValidClassOnEmptyFields = false,
-    // path to jquery validation script
-    $jqueryValidationScriptPath =
-      'http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.min.js'
-    ,
-    $useJqueryValidation = true
+    $useJqueryValidation = true,
+    $jqueryValidationGenerator
   ;
 
 
   /**
    * Handles setting up widget schema for required fields asterisks
-   * Done here to ensure this is called
    * 
    * @see parent
    */
-  public function __construct($defaults = array(), $options = array(), $CSRFSecret = null)
+  public function configure()
   {
-    parent::__construct($defaults, $options, $CSRFSecret);
-
     $formFormatter = $this->getWidgetSchema()->getFormFormatter();
 
     if (!$formFormatter instanceOf
@@ -53,20 +47,11 @@ implements sfFormJqueryValidationInterface
 
     $formFormatter->setForm($this);
 
-    // set validator script
-    if (sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_script'))
-    {
-      $this->setJqueryValidationScriptPath(
-        sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_script')
-      );
-    }
-
     $this->setUseJqueryValidation(
       sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_by_default')
     );
 
     $this->setJqueryValidationGenerator(new sfJqueryValidationGenerator($this));
-    
   }
 
   /**
@@ -266,24 +251,6 @@ implements sfFormJqueryValidationInterface
   }
 
   /**
-   * @return  string
-   */
-  public function getJqueryValidationScriptPath()
-  {
-    return $this->jqueryValidationScriptPath;
-  }
-
-  /**
-   * @param   string  $jqueryValidationScriptPath
-   * @return  self
-   */
-  public function setJqueryValidationScriptPath($jqueryValidationScriptPath)
-  {
-    $this->jqueryValidationScriptPath = $jqueryValidationScriptPath;
-    return $this;
-  }
-
-  /**
    * @todo
    * @return  string
    */
@@ -316,10 +283,24 @@ implements sfFormJqueryValidationInterface
       return parent::getJavaScripts();
     }
 
-    return array_merge(parent::getJavaScripts(), array(
-        $this->getJqueryValidationScriptPath(),
-        $this->getValidationScriptPath()
-    ));
+    return array_merge(
+      parent::getJavaScripts(),
+      array($this->getValidationScriptPath()),
+      $this->getJqueryValidationGenerator()->getJavascripts()
+    );
+  }
+
+  public function getStylesheets()
+  {
+    if (!$this->getUseJqueryValidation())
+    {
+      return parent::getStylesheets();
+    }
+
+    return array_merge(
+      parent::getStylesheets(),
+      $this->getJqueryValidationGenerator()->getStylesheets()
+    );
   }
 
   /**
