@@ -439,30 +439,56 @@ EOF;
 
     return isset($rules[$fieldName]) ? $rules[$fieldName] : null;
   }
-
   
-
+  /**
+   * Add a rule for a field
+   *
+   * @param   string                          $fieldName
+   * @param   string                          $ruleName
+   * @param   sfJqueryValidationValidatorRule $rule
+   *
+   * @return  self
+   */
   public function addFieldRule(
     $fieldName, $ruleName, sfJqueryValidationValidatorRule $rule)
   {
-    $rules = $this->getRules();
-    $toMerge = isset($rules[$fieldName]) ? $rules[$fieldName] : array();
-    $rules[$fieldName] = array_merge($toMerge, $fieldRules);
-    $this->setRules($rules);
+    $this->mergeFieldRules($fieldName, array($ruleName => $rule));
 
     return $this;
   }
 
-  public function removeFieldRule($fieldName, $rule, $message)
+  /**
+   * Remove a rule for a field
+   *
+   * @param   string  $fieldName
+   * @param   string  $ruleName
+   *
+   * @return  self
+   */
+  public function removeFieldRule(
+    $fieldName, $ruleName)
   {
-    // @todo
+    $rules = $this->getFieldRules($fieldName);
+
+    if ($rules)
+    {
+      unset($rules[$ruleName]);
+    }
+
+    return $this;
   }
 
   /**
+   * Generate a javascript object as a string
    *
-   * @param array $array an array of arrays or strings
+   * Reason for using this rather than json_encode is that json_encode doesn't
+   * allow raw javascript which we need
+   *
+   * @param   array   $array  an array of arrays or strings
+   *
+   * @return  string
    */
-  protected function _generateJavascriptObject(array $array)
+  protected function _generateJavascriptObject(array $array, $linePrefix = '')
   {
     $return = array();
 
@@ -470,7 +496,7 @@ EOF;
     {
       if (is_array($value))
       {
-        $string = $this->_generateJavascriptObject($value);
+        $string = $this->_generateJavascriptObject($value, $linePrefix . '  ');
       }
       else
       {
@@ -483,9 +509,18 @@ EOF;
       $return[] = '"' . $key . '": ' . $string;
     }
 
-    return '{' . implode(', ', $return) . '}';
+    return "{\n" . $linePrefix . '  '
+      . implode(", \n" . $linePrefix . '  ', $return)
+      . "\n" . $linePrefix . "}";
   }
 
+  /**
+   * Get all the rules as a string of a javascript object for outputting
+   *
+   * @throws  Exception
+   *
+   * @return  string
+   */
   public function getRulesString()
   {
     $return = array();
@@ -502,6 +537,18 @@ EOF;
 
       foreach ($rules as $name => $ruleObj)
       {
+        if ($ruleObj === null)
+        {
+          continue;
+        }
+
+        if (!$ruleObj instanceof sfJqueryValidationValidatorRule)
+        {
+          throw new Exception(
+            'Rule must be an instance of sfJqueryValidationValidatorRule'
+          );
+        }
+
         $rulesArr[$name] = $ruleObj->getRule();
       }
 
@@ -511,6 +558,13 @@ EOF;
     return $this->_generateJavascriptObject($return);
   }
 
+  /**
+   * Get all the messages as a string of a javascript object for outputting
+   *
+   * @throws  Exception
+   *
+   * @return  string
+   */
   public function getMessagesString()
   {
     $return = array();
@@ -527,6 +581,18 @@ EOF;
 
       foreach ($rules as $name => $ruleObj)
       {
+        if ($ruleObj === null)
+        {
+          continue;
+        }
+
+        if (!$ruleObj instanceof sfJqueryValidationValidatorRule)
+        {
+          throw new Exception(
+            'Rule must be an instance of sfJqueryValidationValidatorRule'
+          );
+        }
+
         $messagesArr[$name] = $ruleObj->getMessage();
       }
 
@@ -536,23 +602,56 @@ EOF;
     return $this->_generateJavascriptObject($return);
   }
 
+  /**
+   * Get an array of options
+   *
+   * Options are the ones jquery accept:
+   * http://docs.jquery.com/Plugins/Validation/validate#toptions
+   *
+   * @return  array
+   */
   public function getOptions()
   {
     return $this->_options;
   }
 
+
+  /**
+   * Set an array of options
+   *
+   * Options are the ones jquery accept:
+   * http://docs.jquery.com/Plugins/Validation/validate#toptions
+   *
+   * @return  array
+   */
   public function setOptions(array $options)
   {
     $this->_options = $options;
     return $this;
   }
 
+  /**
+   * Get a particular option
+   *
+   * @param   string  $name
+   * @return  mixed
+   */
   public function getOption($name)
   {
     $options = $this->getOptions();
     return isset($options[$name]) ? $options[$name] : null;
   }
 
+  /**
+   * Set an option:
+   *
+   * Options are the ones jquery accept:
+   * http://docs.jquery.com/Plugins/Validation/validate#toptions
+   *
+   * @param   string  $name
+   * @param   mixed   $value
+   * @return  self
+   */
   public function addOption($name, $value)
   {
     $options = $this->getOptions();
@@ -561,6 +660,12 @@ EOF;
     return $this;
   }
 
+  /**
+   * Kill an option
+   *
+   * @param   string  $name
+   * @return  self
+   */
   public function removeOption($name)
   {
     $options = $this->getOptions();
@@ -569,6 +674,11 @@ EOF;
     return $this;
   }
 
+  /**
+   * Gets the default options for validation
+   *
+   * @return  string
+   */
   public function getDefaultOptions()
   {
     $defaultOptions = array();
