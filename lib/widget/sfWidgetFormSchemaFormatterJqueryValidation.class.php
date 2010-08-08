@@ -18,16 +18,17 @@ class sfWidgetFormSchemaFormatterJqueryValidation
                               <div class=\"fields\">
                               %field%\n %hidden_fields%
                               </div>\n
-                              <div class=\"clear\"></div>\n
+                              <div class=\"clear error-hook\"></div>\n
                               %error%
                               %help%\n</div>\n",
     $errorRowFormat        = "<div class=\"form-global-errors\">\n
                               %global_error%\n
                               %errors%</div>",
     $helpFormat            = '<div class="form-help">%help%</div>',
-    $errorListFormatInARow = "<ul class=\"form-errors\">\n%errors%</ul>\n",
-    $errorRowFormatInARow      = "    <li class=\"error\">%error%</li>\n",
-    $namedErrorRowFormatInARow = "    <li class=\"error\">%name%: %error%</li>\n",
+    $errorListFormatInARow = "<ul class=\"form-errors sf-errors\">\n%errors%</ul>\n",
+    $errorRowFormatInARow  = "    <li class=\"error\">%error%</li>\n",
+    $namedErrorRowFormatInARow
+                           = "    <li class=\"error\">%name%: %error%</li>\n",
     $rowErrorClass         = 'form-row-error',
     $requiredFormat        = '<span class="req">*</span>',
     $decoratorFormat       = "<div class=\"form-decorator\">\n%content%</div>",
@@ -36,8 +37,18 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     $globalErrorFormat     = "<div class=\"global-error\">\n%error%\n</div>",
     $fieldErrorClass       = 'error',
     $fieldValidClass       = 'valid',
-    $jqueryValidationErrorElement = 'li',
-    $jqueryValidationWrapper = 'ul.form-errors'
+    $jqueryValidationErrorElement
+                           = 'li',
+    $jqueryValidationWrapper
+                           = 'ul class="form-errors jquery-validation-errors"',
+    $jqueryValidationSubmitHandlerCallback = "",
+    $jqueryValidationInvalidHandlerCallback = "",
+    $jqueryValidationErrorPlacementCallback = "
+      element.parent().nextAll('.error-hook').first().after(error);
+    ",
+    $jqueryValidationShowErrorsCallback = "",
+    $jqueryValidationHighlightCallback = "",
+    $jqueryValidationUnhighlightCallback = ""
   ;
 
   /**
@@ -261,5 +272,89 @@ class sfWidgetFormSchemaFormatterJqueryValidation
   public function getJqueryValidationWrapper()
   {
     return $this->jqueryValidationWrapper;
+  }
+
+  public function getJqueryValidationSubmitHandlerCallback()
+  {
+    return $this->jqueryValidationSubmitHandlerCallback;
+  }
+
+  public function setJqueryValidationSubmitHandlerCallback(
+    $jqueryValidationSubmitHandlerCallback
+  )
+  {
+    $this->jqueryValidationSubmitHandlerCallback
+      = $jqueryValidationSubmitHandlerCallback;
+    return $this;
+  }
+
+  public function getJqueryValidationInvalidHandlerCallback()
+  {
+    return $this->jqueryValidationInvalidHandlerCallback;
+  }
+
+  public function setJqueryValidationInvalidHandlerCallback(
+    $jqueryValidationInvalidHandlerCallback
+  )
+  {
+    $this->jqueryValidationInvalidHandlerCallback
+      = $jqueryValidationInvalidHandlerCallback;
+    return $this;
+  }
+
+  public function getJqueryValidationShowErrorsCallback()
+  {
+    return $this->jqueryValidationShowErrorsCallback;
+  }
+
+  public function setJqueryValidationShowErrorsCallback(
+    $jqueryValidationShowErrorsCallback
+  )
+  {
+    $this->jqueryValidationShowErrorsCallback
+      = $jqueryValidationShowErrorsCallback;
+    return $this;
+  }
+
+  public function getJqueryValidationErrorPlacementCallback()
+  {
+    return $this->jqueryValidationErrorPlacementCallback;
+  }
+
+  public function setJqueryValidationErrorPlacementCallback(
+    $jqueryValidationErrorPlacementCallback
+  )
+  {
+    $this->jqueryValidationErrorPlacementCallback
+      = $jqueryValidationErrorPlacementCallback;
+    return $this;
+  }
+
+  public function getJqueryValidationHighlightCallback()
+  {
+    return $this->jqueryValidationHighlighCallback;
+  }
+
+  public function setJqueryValidationHighlightCallback(
+    $jqueryValidationHighlighCallback
+  )
+  {
+    $this->jqueryValidationHighlighCallback
+      = $jqueryValidationHighlighCallback;
+    return $this;
+  }
+
+  public function getJqueryValidationUnhighlightCallback()
+  {
+    return $this->jqueryValidationUnhighlighCallback;
+  }
+
+  public function setJqueryValidationUnhighlightCallback(
+    $jqueryValidationUnhighlighCallback
+  )
+  {
+    $this->jqueryValidationUnhighlighCallback
+      = $jqueryValidationUnhighlighCallback;
+    return $this;
   }
 }

@@ -54,6 +54,13 @@ class sfJqueryValidationGenerator
   protected $_rulesGenerated = false;
 
   /**
+   * Whether formatting has been generated yet
+   *
+   * @var boolean
+   */
+  protected $_formFormatterOptionsGenerated = false;
+
+  /**
    * A collection of options for the jQuery validation
    *
    * @var array
@@ -75,13 +82,39 @@ class sfJqueryValidationGenerator
   protected $_stylesheets = array();
 
   /**
+   * Callback methods
+   *
+   * @var string
+   */
+  protected 
+    $_submitHandlerCallback,
+    $_invalidHandlerCallback,
+    $_showErrorsCallback,
+    $_errorPlacementCallback,
+    $_highlightCallback,
+    $_unhighlightCallback
+  ;
+
+  /**
+   * Callback method templates
+   *
+   * @var string
+   */
+  protected 
+    $_submitHandlerCallbackTemplate = 'function(form) {%callback%}',
+    $_invalidHandlerCallbackTemplate = 'function(form, validator) {%callback%}',
+    $_showErrorsCallbackTemplate = 'function(errorMap, errorList) {%callback%}',
+    $_errorPlacementCallbackTemplate = 'function(error, element) {%callback%}',
+    $_highlightCallbackTemplate = 'function(element, errorClass, validClass) {%callback%}',
+    $_unhighlightCallbackTemplate = 'function(element, errorClass, validClass) {%callback%}'
+  ;
+
+  /**
    *
    * @param sfFormJqueryValidationInterface $form
-   * @param array                           $options options for jQuery Validation
    */
   public function  __construct(
-    sfFormJqueryValidationInterface $form,
-    array $options = array()
+    sfFormJqueryValidationInterface $form
   )
   {
     $this->setForm($form);
@@ -98,9 +131,6 @@ class sfJqueryValidationGenerator
     }
 
     $this->setScriptTemplate($this->getDefaultScriptTemplate());
-    $this->setOptions($this->getDefaultOptions());
-    $this->setOptionsFromFormFormatter();
-    $this->mergeOptions($options);
   }
 
   /**
@@ -174,6 +204,11 @@ EOF;
   public function generateJavascript(array $extraOptions = array())
   {
 
+    if (!$this->getFormFormattingOptionsGenerated())
+    {
+      $this->generateFormFormatterOptions();
+    }
+
     if (!$this->getRulesGenerated())
     {
       $this->generateRules();
@@ -190,8 +225,40 @@ EOF;
       'messages' => $this->getMessagesString()
     );
 
+    $callbacks = array();
 
-    $options = array_merge($this->getOptions(), $rules, $extraOptions);
+    if ($this->getSubmitHandlerCallback())
+    {
+      $callbacks['submitHandler'] = $this->getSubmitHandlerCallbackParsed();
+    }
+
+    if ($this->getInvalidHandlerCallback())
+    {
+      $callbacks['invalidHandler'] = $this->getInvalidHandlerCallbackParsed();
+    }
+
+    if ($this->getShowErrorsCallback())
+    {
+      $callbacks['showErrors'] = $this->getShowErrorsCallbackParsed();
+    }
+
+    if ($this->getErrorPlacementCallback())
+    {
+      $callbacks['errorPlacement'] = $this->getErrorPlacementCallbackParsed();
+    }
+
+    if ($this->getHighlightCallback())
+    {
+      $callbacks['highlight'] = $this->getHighlightCallback();
+    }
+
+    if ($this->getUnhighlightCallback())
+    {
+      $callbacks['unhighlight'] = $this->getUnhighlightCallback();
+    }
+
+
+    $options = array_merge($this->getOptions(), $rules, $callbacks, $extraOptions);
 
 
     $script = strtr(
@@ -298,18 +365,18 @@ EOF;
    *
    * @return  void
    */
-  public function generateRules($reset = false)
+  public function generateRules($reset = false, $overwrite = false)
   {
     if (!$reset)
     {
       $this->_rules = array();
     }
 
-
     $this->_recursiveGenerateFieldsAndValidator(
       $this->getForm()->getFormFieldSchema(),
       $this->getForm()->getValidatorSchema(),
-      $reset
+      $reset,
+      $overwrite
     );
 
     $this->setRulesGenerated(true);
@@ -321,6 +388,8 @@ EOF;
    *
    * @param   sfFormFieldSchema   $formFieldSchema
    * @param   sfValidatorSchema   $validatorSchema
+   * @param   boolean             $reset
+   * @param   boolean             $overwrite
    *
    * @throws  Exception
    *
@@ -329,7 +398,8 @@ EOF;
   protected function _recursiveGenerateFieldsAndValidator(
     sfFormFieldSchema $formFieldSchema,
     sfValidatorSchema $validatorSchema,
-    $reset = false
+    $reset = false,
+    $overwrite = false
   )
   {
     foreach($formFieldSchema as $name => $field)
@@ -378,7 +448,7 @@ EOF;
       else
       {
         $this->mergeFieldRules(
-          $field->renderName(), $parser->getRules()
+          $field->renderName(), $parser->getRules(), $overwrite
         );
       }
 
@@ -440,6 +510,33 @@ EOF;
     return $this;
   }
 
+  /**
+   * Whether or not form formatting options have been generated or not
+   *
+   * @return  boolean
+   */
+  public function getFormFormattingOptionsGenerated()
+  {
+    return $this->_formFormatterOptionsGenerated;
+  }
+
+  /**
+   * Set whether form formatting options have been generated or not
+   * (setting to false when generated will mean they get regenerated)
+   *
+   * @param   boolean   $formFormattingOptionsGenerated
+   * @return  self
+   */
+  protected function setFormFormattingOptionsGenerated(
+    $formFormattingOptionsGenerated
+  )
+  {
+    $this->_formFormattingOptionsGenerated 
+      = (bool) $formFormattingOptionsGenerated
+    ;
+    return $this;
+  }
+
 
   /**
    * Set the rules for a field
@@ -464,15 +561,22 @@ EOF;
    * @param   string  $fieldName
    * @param   array   $fieldRules array of rules in form of
    *                              array(name => sfJqueryValidationValidatorRule)
+   * @param   boolean $overwrite
+   *
    * @return  self
    */
-  public function mergeFieldRules($fieldName, array $fieldRules)
+  public function mergeFieldRules($fieldName, array $fieldRules, $overwrite = true)
   {
     $toMerge = $this->getFieldRules($fieldName)
       ? $this->getFieldRules($fieldName)
       : array()
     ;
-    $this->setFieldRules($fieldName, array_merge($toMerge, $fieldRules));
+    $this->setFieldRules(
+      $fieldName,
+      $overwrite 
+        ? array_merge($toMerge, $fieldRules) 
+        : array_merge($fieldRules, $toMerge)
+    );
 
     return $this;
   }
@@ -711,12 +815,17 @@ EOF;
 
   /**
    * @see     self::setOptions()
-   * @param   array $options
+   * @param   array   $options
+   * @param   boolean $overwrite  (Optional) default true
    * @return  self
    */
-  public function mergeOptions(array $options)
+  public function mergeOptions(array $options, $overwrite = true)
   {
-    $this->setOptions(array_merge($this->getOptions(), $options));
+    $this->setOptions(
+      $overwrite 
+        ? array_merge($this->getOptions(), $options)
+        : array_merge($options, $this->getOptions())
+    );
     return $this;
   }
 
@@ -776,35 +885,64 @@ EOF;
     return $defaultOptions;
   }
 
-  public function setOptionsFromFormFormatter()
+
+  public function generateFormFormatterOptions($overwrite = true)
   {
     $options = array();
 
     $options['errorClass'] = '"'
-      . $this->getForm()->getWidgetSchema()->getFormFormatter()
-          ->getFieldErrorClass()
+      . addcslashes(
+          $this->getForm()->getWidgetSchema()->getFormFormatter()
+            ->getFieldErrorClass(),
+          '"'
+        )
       . '"'
     ;
 
     $options['validClass'] = '"'
-      . $this->getForm()->getWidgetSchema()->getFormFormatter()
-          ->getFieldValidClass()
+      . addcslashes(
+          $this->getForm()->getWidgetSchema()->getFormFormatter()
+            ->getFieldValidClass(),
+          '"'
+        )
       . '"'
     ;
 
     $options['errorElement'] = '"'
-      . $this->getForm()->getWidgetSchema()->getFormFormatter()
-          ->getJqueryValidationErrorElement()
+      . addcslashes(
+          $this->getForm()->getWidgetSchema()->getFormFormatter()
+            ->getJqueryValidationErrorElement(),
+          '"'
+        )
       . '"'
     ;
 
     $options['wrapper'] = '"'
-      . $this->getForm()->getWidgetSchema()->getFormFormatter()
-          ->getJqueryValidationWrapper()
+      . addcslashes(
+          $this->getForm()->getWidgetSchema()->getFormFormatter()
+            ->getJqueryValidationWrapper(),
+          '"'
+        )
       . '"'
     ;
 
-    return $this->mergeOptions($options);
+    // set error placement callback
+    $this->setErrorPlacementCallback(
+      $this->getForm()->getWidgetSchema()->getFormFormatter()
+        ->getJqueryValidationErrorPlacementCallback()
+    );
+
+    // set invalid handler callback
+    $this->setInvalidHandlerCallback(
+      $this->getForm()->getWidgetSchema()->getFormFormatter()
+        ->getJqueryValidationInvalidHandlerCallback()
+    );
+
+    $this->mergeOptions($options, $overwrite);
+
+    
+
+    return $this;
   }
 
   /**
@@ -851,4 +989,304 @@ EOF;
     return $this;
   }
 
+  /**
+   * Parse a JS callback into it's corresponding function, returns blank if the
+   * callback is empty
+   *
+   * @param   string $callback
+   * @param   string $template
+   * @return  string
+   */
+  protected function _parseCallback($callback, $template)
+  {
+    if ($callback)
+    {
+      return strtr($template, array(
+        '%callback%' => $callback
+      ));
+    }
+    return '';
+  }
+
+  /**
+   * @return  string
+   */
+  public function getSubmitHandlerCallback()
+  {
+    return $this->_submitHandlerCallback;
+  }
+
+  /**
+   * @param   string  $submitHandlerCallback
+   * @return  self
+   */
+  public function setSubmitHandlerCallback($submitHandlerCallback)
+  {
+    $this->_submitHandlerCallback = $submitHandlerCallback;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getSubmitHandlerCallbackTemplate()
+  {
+    return $this->_submitHandlerCallbackTemplate;
+  }
+
+  /**
+   * @param   string  $submitHandlerCallbackTemplate
+   * @return  self
+   */
+  public function setSubmitHandlerCallbackTemplate($submitHandlerCallbackTemplate)
+  {
+    $this->_submitHandlerCallbackTemplate = $submitHandlerCallbackTemplate;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getSubmitHandlerCallbackParsed()
+  {
+    return $this->_parseCallback(
+      $this->getSubmitHandlerCallback(),
+      $this->getSubmitHandlerCallbackTemplate()
+    );
+  }
+
+  /**
+   * @return  string
+   */
+  public function getInvalidHandlerCallback()
+  {
+    return $this->_invalidHandlerCallback;
+  }
+
+  /**
+   * @param   string  $invalidHandlerCallback
+   * @return  self
+   */
+  public function setInvalidHandlerCallback($invalidHandlerCallback)
+  {
+    $this->_invalidHandlerCallback = $invalidHandlerCallback;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getInvalidHandlerCallbackTemplate()
+  {
+    return $this->_invalidHandlerCallbackTemplate;
+  }
+
+  /**
+   * @param   string  $invalidHandlerCallbackTemplate
+   * @return  self
+   */
+  public function setInvalidHandlerCallbackTemplate($invalidHandlerCallbackTemplate)
+  {
+    $this->_invalidHandlerCallbackTemplate = $invalidHandlerCallbackTemplate;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getInvalidHandlerCallbackParsed()
+  {
+    return $this->_parseCallback(
+      $this->getInvalidHandlerCallback(),
+      $this->getInvalidHandlerCallbackTemplate()
+    );
+  }
+
+  /**
+   * @return  string
+   */
+  public function getShowErrorsCallback()
+  {
+    return $this->_showErrorsCallback;
+  }
+
+  /**
+   * @param   string  $showErrorsCallback
+   * @return  self
+   */
+  public function setShowErrorsCallback($showErrorsCallback)
+  {
+    $this->_showErrorsCallback = $showErrorsCallback;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getShowErrorsCallbackTemplate()
+  {
+    return $this->_showErrorsCallbackTemplate;
+  }
+
+  /**
+   * @param   string  $showErrorsCallbackTemplate
+   * @return  self
+   */
+  public function setShowErrorsCallbackTemplate($showErrorsCallbackTemplate)
+  {
+    $this->_showErrorsCallbackTemplate = $showErrorsCallbackTemplate;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getShowErrorsCallbackParsed()
+  {
+    return $this->_parseCallback(
+      $this->getShowErrorsCallback(),
+      $this->getShowErrorsCallbackTemplate()
+    );
+  }
+
+  /**
+   * @return  string
+   */
+  public function getErrorPlacementCallback()
+  {
+    return $this->_errorPlacementCallback;
+  }
+
+  /**
+   * @param   string  $errorPlacementCallback
+   * @return  self
+   */
+  public function setErrorPlacementCallback($errorPlacementCallback)
+  {
+    $this->_errorPlacementCallback = $errorPlacementCallback;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getErrorPlacementCallbackTemplate()
+  {
+    return $this->_errorPlacementCallbackTemplate;
+  }
+
+  /**
+   * @param   string  $errorPlacementCallbackTemplate
+   * @return  self
+   */
+  public function setErrorPlacementCallbackTemplate($errorPlacementCallbackTemplate)
+  {
+    $this->_errorPlacementCallbackTemplate = $errorPlacementCallbackTemplate;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getErrorPlacementCallbackParsed()
+  {
+    return $this->_parseCallback(
+      $this->getErrorPlacementCallback(),
+      $this->getErrorPlacementCallbackTemplate()
+    );
+  }
+
+  /**
+   * @return  string
+   */
+  public function getHighlightCallback()
+  {
+    return $this->_highlightCallback;
+  }
+
+  /**
+   * @param   string  $highlightCallback
+   * @return  self
+   */
+  public function setHighlightCallback($highlightCallback)
+  {
+    $this->_highlightCallback = $highlightCallback;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getHighlightCallbackTemplate()
+  {
+    return $this->_highlightCallbackTemplate;
+  }
+
+  /**
+   * @param   string  $highlightCallbackTemplate
+   * @return  self
+   */
+  public function setHighlightCallbackTemplate($highlightCallbackTemplate)
+  {
+    $this->_highlightCallbackTemplate = $highlightCallbackTemplate;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getHighlightCallbackParsed()
+  {
+    return $this->_parseCallback(
+      $this->getHighlightCallback(),
+      $this->getHighlightCallbackTemplate()
+    );
+  }
+
+  /**
+   * @return  string
+   */
+  public function getUnhighlightCallback()
+  {
+    return $this->_unhighlightCallback;
+  }
+
+  /**
+   * @param   string  $unhighlightCallback
+   * @return  self
+   */
+  public function setUnhighlightCallback($unhighlightCallback)
+  {
+    $this->_unhighlightCallback = $unhighlightCallback;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getUnhighlightCallbackTemplate()
+  {
+    return $this->_unhighlightCallbackTemplate;
+  }
+
+  /**
+   * @param   string  $unhighlightCallbackTemplate
+   * @return  self
+   */
+  public function setUnhighlightCallbackTemplate($unhighlightCallbackTemplate)
+  {
+    $this->_unhighlightCallbackTemplate = $unhighlightCallbackTemplate;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getUnhighlightCallbackParsed()
+  {
+    return $this->_parseCallback(
+      $this->getUnhighlightCallback(),
+      $this->getUnhighlightCallbackTemplate()
+    );
+  }  
 }

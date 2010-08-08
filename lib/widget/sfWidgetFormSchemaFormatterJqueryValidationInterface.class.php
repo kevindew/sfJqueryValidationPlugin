@@ -13,15 +13,42 @@ interface sfWidgetFormSchemaFormatterJqueryValidationInterface
   public function getGlobalErrorFormat();
 
   public function setGlobalErrorFormat($globalErrorFormat);
-//
-//  public function getErrorPlacement();
-//
-//  public function setErrorPlacement($errorPlacement);
-//
-//  public function getShowTopError();
-//
-//  public function setShowTopError($showTopError);
-//
+
+  public function getJqueryValidationSubmitHandlerCallback();
+
+  public function setJqueryValidationSubmitHandlerCallback(
+    $jqueryValidationSubmitHandlerCallback
+  );
+
+  public function getJqueryValidationInvalidHandlerCallback();
+
+  public function setJqueryValidationInvalidHandlerCallback(
+    $jqueryValidationInvalidHandlerCallback
+  );
+
+  public function getJqueryValidationShowErrorsCallback();
+
+  public function setJqueryValidationShowErrorsCallback(
+    $jqueryValidationShowErrorsCallback
+  );
+
+  public function getJqueryValidationErrorPlacementCallback();
+
+  public function setJqueryValidationErrorPlacementCallback(
+    $jqueryValidationErrorPlacementCallback
+  );
+
+  public function getJqueryValidationHighlightCallback();
+
+  public function setJqueryValidationHighlightCallback(
+    $jqueryValidationHighlightCallback
+  );
+
+  public function getJqueryValidationUnhighlightCallback();
+
+  public function setJqueryValidationUnhighlightCallback(
+    $jqueryValidationUnhighlightCallback
+  );
 
   public function setJqueryValidationErrorElement($jqueryValidationErrorElement);
 
