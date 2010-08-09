@@ -29,7 +29,7 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     $errorRowFormatInARow  = "    <li class=\"error\">%error%</li>\n",
     $namedErrorRowFormatInARow
                            = "    <li class=\"error\">%name%: %error%</li>\n",
-    $rowErrorClass         = 'form-row-error',
+    $rowErrorClass         = '',
     $requiredFormat        = '<span class="req">*</span>',
     $decoratorFormat       = "<div class=\"form-decorator\">\n%content%</div>",
     $form                  = null,
@@ -41,15 +41,36 @@ class sfWidgetFormSchemaFormatterJqueryValidation
                            = 'li',
     $jqueryValidationWrapper
                            = 'ul class="form-errors jquery-validation-errors"',
-    $jqueryValidationSubmitHandlerCallback = "",
-    $jqueryValidationInvalidHandlerCallback = "",
-    $jqueryValidationErrorPlacementCallback = "
+    $jqueryValidationErrorContainer
+                          = ".form-global-errors",
+    $jqueryValidationSubmitHandlerCallback
+                          = "",
+    $jqueryValidationInvalidHandlerCallback
+                          = "",
+    $jqueryValidationErrorPlacementCallback
+                          = "
       element.parent().nextAll('.error-hook').first().after(error);
     ",
-    $jqueryValidationShowErrorsCallback = "",
-    $jqueryValidationHighlightCallback = "",
-    $jqueryValidationUnhighlightCallback = ""
+    $jqueryValidationShowErrorsCallback
+                          = "",
+    $jqueryValidationHighlightCallback
+                          = "
+      // get ride of existing sf errors
+      $(element).parent().nextAll('.sf-errors').remove();
+      $(element).removeClass(validClass).addClass(errorClass);
+    ",
+    $jqueryValidationUnhighlightCallback
+                          = "
+      // get ride of existing sf errors
+      $(element).parent().nextAll('.sf-errors').remove();
+      $(element).removeClass(errorClass).addClass(validClass);
+    "
   ;
+
+  public function __construct(sfWidgetFormSchema $widgetSchema)
+  {
+    parent::__construct($widgetSchema);
+  }
 
   /**
    * @see parent
@@ -274,6 +295,19 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     return $this->jqueryValidationWrapper;
   }
 
+  public function setJqueryValidationErrorContainer(
+    $jqueryValidationErrorContainer
+  )
+  {
+    $this->jqueryValidationErrorContainer = $jqueryValidationErrorContainer;
+    return $this;
+  }
+
+  public function getJqueryValidationErrorContainer()
+  {
+    return $this->jqueryValidationErrorContainer;
+  }
+
   public function getJqueryValidationSubmitHandlerCallback()
   {
     return $this->jqueryValidationSubmitHandlerCallback;
@@ -332,29 +366,29 @@ class sfWidgetFormSchemaFormatterJqueryValidation
 
   public function getJqueryValidationHighlightCallback()
   {
-    return $this->jqueryValidationHighlighCallback;
+    return $this->jqueryValidationHighlightCallback;
   }
 
   public function setJqueryValidationHighlightCallback(
-    $jqueryValidationHighlighCallback
+    $jqueryValidationHighlightCallback
   )
   {
-    $this->jqueryValidationHighlighCallback
-      = $jqueryValidationHighlighCallback;
+    $this->jqueryValidationHighlightCallback
+      = $jqueryValidationHighlightCallback;
     return $this;
   }
 
   public function getJqueryValidationUnhighlightCallback()
   {
-    return $this->jqueryValidationUnhighlighCallback;
+    return $this->jqueryValidationUnhighlightCallback;
   }
 
   public function setJqueryValidationUnhighlightCallback(
-    $jqueryValidationUnhighlighCallback
+    $jqueryValidationUnhighlightCallback
   )
   {
-    $this->jqueryValidationUnhighlighCallback
-      = $jqueryValidationUnhighlighCallback;
+    $this->jqueryValidationUnhighlightCallback
+      = $jqueryValidationUnhighlightCallback;
     return $this;
   }
 }

@@ -29,4 +29,6 @@ interface sfFormJqueryValidationInterface
   public function setJqueryValidationGenerator(
     sfJqueryValidationGenerator $jqueryValidationGenerator
   );
+
+  public function doGenerateJqueryValidation();
 }

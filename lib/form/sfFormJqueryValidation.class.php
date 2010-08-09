@@ -306,4 +306,27 @@ class sfFormJqueryValidation
     $this->jqueryValidationGenerator = $jqueryValidationGenerator;
     return $this;
   }
+
+  /**
+   * Method for hooking in custom jQuery validation rules
+   *
+   * Extend this!
+   *
+   * @return void
+   */
+  public function doGenerateJqueryValidation()
+  {
+    $this->_addJqueryValidationGlobalMessage();
+  }
+
+  protected function _addJqueryValidationGlobalMessage()
+  {
+    if ($this->getGlobalErrorMessage())
+    {
+//      $this->getJqueryValidationGenerator()->setShowErrorsCallback(
+//        'alert(\'erm\');'
+//      );
+    }
+
+  }
 }

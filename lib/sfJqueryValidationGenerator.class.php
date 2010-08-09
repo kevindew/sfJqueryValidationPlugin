@@ -195,6 +195,14 @@ EOF;
   }
 
   /**
+   * Method to be overloaded for adding custom logic to the javascript
+   *
+   * @return void
+   */
+  public function doGenerateJavascript()
+  {}
+
+  /**
    * Generates the javascript rules for the validation
    *
    * @param   array   $extraOptions
@@ -213,6 +221,9 @@ EOF;
     {
       $this->generateRules();
     }
+
+    $this->doGenerateJavascript();
+    $this->getForm()->doGenerateJqueryValidation();
 
     // no rules
     if (!count($this->getRules()))
@@ -246,15 +257,15 @@ EOF;
     {
       $callbacks['errorPlacement'] = $this->getErrorPlacementCallbackParsed();
     }
-
+    
     if ($this->getHighlightCallback())
     {
-      $callbacks['highlight'] = $this->getHighlightCallback();
+      $callbacks['highlight'] = $this->getHighlightCallbackParsed();
     }
 
     if ($this->getUnhighlightCallback())
     {
-      $callbacks['unhighlight'] = $this->getUnhighlightCallback();
+      $callbacks['unhighlight'] = $this->getUnhighlightCallbackParsed();
     }
 
 
@@ -433,6 +444,12 @@ EOF;
         throw new Exception('Validation isn\'t an instance of sfValidatorBase');
       }
 
+      // no need to generate for hidden widgets
+      if ($field->getWidget() instanceof sfWidgetInputHidden)
+      {
+        continue;
+      }
+
       $factory = new sfJqueryValidationValidatorParserFactory(
         $field,
         $validatorSchema[$name]
@@ -459,7 +476,7 @@ EOF;
       $this->setStylesheets(
         array_merge($this->getStylesheets(), $parser->getStylesheets())
       );
-    }
+    } // end foreach
   }
 
   /**
@@ -736,7 +753,7 @@ EOF;
       $return[$field] = $rulesArr;
     }
 
-    return $this->_generateJavascriptObject($return);
+    return $this->_generateJavascriptObject($return, '  ');
   }
 
   /**
@@ -780,7 +797,7 @@ EOF;
       $return[$field] = $messagesArr;
     }
 
-    return $this->_generateJavascriptObject($return);
+    return $this->_generateJavascriptObject($return, '  ');
   }
 
   /**
@@ -885,7 +902,12 @@ EOF;
     return $defaultOptions;
   }
 
-
+  /**
+   * Generate options from the form formatter
+   *
+   * @param   boolean $overwrite  (Optional) Default true
+   * @return  self
+   */
   public function generateFormFormatterOptions($overwrite = true)
   {
     $options = array();
@@ -926,21 +948,65 @@ EOF;
       . '"'
     ;
 
-    // set error placement callback
-    $this->setErrorPlacementCallback(
-      $this->getForm()->getWidgetSchema()->getFormFormatter()
-        ->getJqueryValidationErrorPlacementCallback()
-    );
-
-    // set invalid handler callback
-    $this->setInvalidHandlerCallback(
-      $this->getForm()->getWidgetSchema()->getFormFormatter()
-        ->getJqueryValidationInvalidHandlerCallback()
-    );
+    $options['errorContainer'] = '"'
+      . addcslashes(
+          $this->getForm()->getWidgetSchema()->getFormFormatter()
+            ->getJqueryValidationErrorContainer(),
+          '"'
+        )
+      . '"'
+    ;
 
     $this->mergeOptions($options, $overwrite);
 
-    
+    // set callbacks
+    if ($overwrite || !$this->getSubmitHandlerCallback())
+    {
+      $this->setSubmitHandlerCallback(
+        $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationSubmitHandlerCallback()
+      );
+    }
+
+    if ($overwrite || !$this->getInvalidHandlerCallback())
+    {
+      $this->setInvalidHandlerCallback(
+        $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationInvalidHandlerCallback()
+      );
+    }
+
+    if ($overwrite || !$this->getErrorPlacementCallback())
+    {
+      $this->setErrorPlacementCallback(
+        $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationErrorPlacementCallback()
+      );
+    }
+
+    if ($overwrite || !$this->getShowErrorsCallback())
+    {
+      $this->setShowErrorsCallback(
+        $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationShowErrorsCallback()
+      );
+    }
+
+    if ($overwrite || !$this->getHighlightCallback())
+    {
+      $this->setHighlightCallback(
+        $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationHighlightCallback()
+      );
+    }
+
+    if ($overwrite || !$this->getUnhighlightCallback())
+    {
+      $this->setUnhighlightCallback(
+        $this->getForm()->getWidgetSchema()->getFormFormatter()
+          ->getJqueryValidationUnhighlightCallback()
+      );
+    }
 
     return $this;
   }

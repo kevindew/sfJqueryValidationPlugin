@@ -148,7 +148,11 @@ class sfJqueryValidationParsersfValidatorBase
    */
   protected function _generateRules()
   {
-    if ($this->getValidator()->hasOption('required'))
+    if (
+      $this->getValidator()->hasOption('required')
+      &&
+      $this->getValidator()->getOption('required')
+    )
     {
       $this->addRule(
         'required',

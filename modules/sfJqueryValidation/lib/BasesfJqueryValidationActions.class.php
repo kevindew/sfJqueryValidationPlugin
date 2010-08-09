@@ -20,10 +20,10 @@ class BasesfJqueryValidationActions extends sfActions
     $this->getResponse()->setContentType('application/x-javascript');
 
     // cache
-    //sfJqueryValidationUtility::setCacheHeaders($this->getResponse());
+    sfJqueryValidationUtility::setCacheHeaders($this->getResponse());
 
     // gzip
-    //sfJqueryValidationUtility::setGzip();
+    sfJqueryValidationUtility::setGzip();
   }
 
 
@@ -50,6 +50,8 @@ class BasesfJqueryValidationActions extends sfActions
     $form->getWidgetSchema()->setIdFormat($request->getParameter('id_format'));
 
     $javascript = $form->getJqueryValidationGenerator()->generateJavascript();
+
+    $javascript = sfJqueryValidationUtility::minify($javascript);
 
     return $this->renderText($javascript);
   }

@@ -19,8 +19,12 @@ class sfJqueryValidationUtility
   static public function setGzip()
   {
     // gzip compression
-    if (sfConfig::get('app_sfJqueryValidationPlugin_gzip', true)
-    && !self::_checkGzipFail()) {
+    if (
+      sfConfig::get('app_sfJqueryValidationPlugin_gzip', true)
+      &&
+      !self::_checkGzipFail()
+    )
+    {
       ob_start("ob_gzhandler");
     }
   }
@@ -67,5 +71,28 @@ class sfJqueryValidationUtility
 
     return $version < 6
       || ($version == 6 && strpos($userAgent, 'SV1') === false);
+  }
+
+  static public function minify($javascript)
+  {
+    if (
+      sfConfig::get('app_sfJqueryValidationPlugin_minify')
+      &&
+      sfConfig::get('app_sfJqueryValidationPlugin_minify_method')
+      &&
+      is_callable(sfConfig::get('app_sfJqueryValidationPlugin_minify_method'))
+    )
+    {
+      $javascript = call_user_func(
+        sfConfig::get('app_sfJqueryValidationPlugin_minify_method'),
+        $javascript,
+        sfConfig::get(
+          'app_sfJqueryValidationPlugin_minify_method_options',
+          array()
+        )
+      );
+    }
+
+    return $javascript;
   }
 }
