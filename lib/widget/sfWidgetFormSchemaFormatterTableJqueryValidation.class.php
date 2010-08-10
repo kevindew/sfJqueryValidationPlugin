@@ -1,46 +1,30 @@
 <?php
 /**
- * A Widget Formatter to Output Divs around form elements
+ * jQuery validation extensions to the table widget form
  *
  * @package     sfJqueryValidationPlugin
  * @subpackage  formSchemaFormatter
  * @author      Kevin Dew <kev@dewsolutions.co.uk>
  */
-class sfWidgetFormSchemaFormatterJqueryValidation
-  extends sfWidgetFormSchemaFormatter
+class sfWidgetFormSchemaFormatterTableJqueryValidation
+  extends sfWidgetFormSchemaFormatterTable
   implements sfWidgetFormSchemaFormatterJqueryValidationInterface
 {
   protected
-    $rowFormat             = "<div class=\"form-row%row_class%\">
-                              <div class=\"label\">
-                              %label%\n
-                              </div>
-                              <div class=\"fields\">
-                              %field%\n %hidden_fields%
-                              </div>\n
-                              <div class=\"clear error-hook\"></div>\n
-                              %error%
-                              %help%\n</div>\n",
-    $errorRowFormat        = "<div class=\"form-global-errors\">\n
-                              %global_error%\n
-                              %errors%</div>",
-    $helpFormat            = '<div class="form-help">%help%</div>',
-    $errorListFormatInARow = "<ul class=\"form-errors sf-errors\">\n%errors%</ul>\n",
-    $errorRowFormatInARow  = "    <li class=\"error\">%error%</li>\n",
-    $namedErrorRowFormatInARow
-                           = "    <li class=\"error\">%name%: %error%</li>\n",
-    $rowErrorClass         = '',
+    $errorRowFormat        = "<tr>%global_error%
+                              <td colspan=\"2\">\n%errors%</td>\n
+                              </tr>\n",
+    $errorListFormatInARow = "<ul class=\"error_list sf_errors\">\n%errors%  </ul>\n",
     $requiredFormat        = '<span class="required">*</span>',
-    $decoratorFormat       = "<div class=\"form-decorator\">\n%content%</div>",
     $form                  = null,
     $markRequired          = true,
-    $globalErrorFormat     = "<div class=\"global-error\">\n%error%\n</div>",
+    $globalErrorFormat     = "<td colspan=\"2\" class=\"global_error\">\n%errors%</td>\n",
     $fieldErrorClass       = 'error',
     $fieldValidClass       = 'valid',
     $jqueryValidationErrorElement
                            = 'li',
     $jqueryValidationWrapper
-                           = 'ul class="form-errors jquery-validation-errors"',
+                           = 'ul class="error_list jq_validation_errors"',
     $jqueryValidationErrorContainer
                           = "",
     $jqueryValidationSubmitHandlerCallback
@@ -49,42 +33,25 @@ class sfWidgetFormSchemaFormatterJqueryValidation
                           = "",
     $jqueryValidationErrorPlacementCallback
                           = "
-      element.parent().nextAll('.error-hook').first().after(error);
+      console.log(error);
+      element.before(error);
     ",
     $jqueryValidationShowErrorsCallback
                           = "",
     $jqueryValidationHighlightCallback
                           = "
       // get rid of existing sf errors
-      $(element).parent().nextAll('.sf-errors').remove();
+      $(element).prevAll('.sf_errors').remove();
       $(element).removeClass(validClass).addClass(errorClass);
     ",
     $jqueryValidationUnhighlightCallback
                           = "
       // get rid of existing sf errors
-      $(element).parent().nextAll('.sf-errors').remove();
+      $(element).prevAll('.sf_errors').remove();
       $(element).removeClass(errorClass).addClass(validClass);
     "
   ;
-  
-  /**
-   * @see parent
-   */
-  public function formatRow($label, $field, $errors = array(), $help = '', $hiddenFields = null)
-  { 
-    $row = parent::formatRow(
-      $label,
-      $field,
-      $errors,
-      $help,
-      $hiddenFields
-    );
-
-    return strtr($row, array(
-      '%row_class%' => (count($errors) > 0) ? ' ' . $this->rowErrorClass : '',
-    ));
-  }
-
+ 
   /**
    * @param   sfForm $form
    * @return  self
@@ -145,7 +112,7 @@ class sfWidgetFormSchemaFormatterJqueryValidation
    * @see parent
    */
   public function generateLabelName($name)
-  {
+  {    
     $label = parent::generateLabelName($name);
 
     $validatorSchema = $this->getForm()
@@ -153,18 +120,24 @@ class sfWidgetFormSchemaFormatterJqueryValidation
       : null
     ;
 
-    if (!$this->getMarkRequired()
-      || !$validatorSchema
-      || !isset($validatorSchema[$name])
+    if (
+      !$this->getMarkRequired()
+      ||
+      !$validatorSchema
+      ||
+      !isset($validatorSchema[$name])
     )
     {
       return $label;
     }
 
-    if ($validatorSchema[$name]->hasOption('required')
-      && $validatorSchema[$name]->getOption('required')
+    if (
+      $validatorSchema[$name]->hasOption('required')
+      &&
+      $validatorSchema[$name]->getOption('required')
       // dont mark a schema as required as it's got it's own fields
-      && !($validatorSchema[$name] instanceof sfValidatorSchema)
+      &&
+      !($validatorSchema[$name] instanceof sfValidatorSchema)
     )
     {
       $label .= $this->requiredFormat;

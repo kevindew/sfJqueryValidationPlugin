@@ -19,39 +19,34 @@ class sfFormJqueryValidation
     $useFieldErrorClassServerSide = true,
     // whether to append valid class server side
     $useFieldValidClassServerSide = true,
-    // whether to show valid on empty fields
+    // whether to show valid on empty fields when form has been submit
     $useValidClassOnEmptyFields = false,
+    // whether to use jquery validation
     $useJqueryValidation = true,
+    // jqueryValidationGenerator Object
     $jqueryValidationGenerator
   ;
 
-
   /**
    * Handles setting up widget schema for required fields asterisks
-   * 
+   *
    * @see parent
    */
-  public function configure()
+  public function __construct($defaults = array(), $options = array(), $CSRFSecret = null)
   {
-    $formFormatter = $this->getWidgetSchema()->getFormFormatter();
-
-    if (!$formFormatter instanceOf
-        sfWidgetFormSchemaFormatterJqueryValidationInterface
-    )
-    {
-      throw new Exception(
-        'Form Formatter must be an instance of'
-        . ' sfWidgetFormSchemaFormatterJqueryValidationInterface'
-      );
-    }
-
-    $formFormatter->setForm($this);
+    parent::__construct($defaults, $options, $CSRFSecret);
 
     $this->setUseJqueryValidation(
       sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_by_default')
     );
 
     $this->setJqueryValidationGenerator(new sfJqueryValidationGenerator($this));
+
+    $formFormatter = $this->getWidgetSchema()->getFormFormatter();
+    if (method_exists($formFormatter, 'setForm'))
+    {
+      $formFormatter->setForm($this);
+    }
   }
 
   /**
@@ -100,7 +95,7 @@ class sfFormJqueryValidation
    */
   public function setUseFieldErrorClassServerSide($useFieldErrorClassServerSide)
   {
-    $this->useFieldErrorClassServerSide = $useFieldErrorClassServerSide;
+    $this->useFieldErrorClassServerSide = (bool) $useFieldErrorClassServerSide;
     return $this;
   }
 
@@ -148,9 +143,14 @@ class sfFormJqueryValidation
   protected function _appendClassesToFormFields()
   {
     if (
-      $this->getUseFieldErrorClassServerSide()
-      ||
-      $this->getUseFieldValidClassServerSide()
+      (
+        $this->getUseFieldErrorClassServerSide()
+        ||
+        $this->getUseFieldValidClassServerSide()
+      )
+      &&
+      $this->getWidgetSchema()->getFormFormatter()
+        instanceof sfWidgetFormSchemaFormatterJqueryValidationInterface
     )
     {
       $errorClass = $this
@@ -217,7 +217,6 @@ class sfFormJqueryValidation
   }
 
   /**
-   * @todo
    * @return  string
    */
   public function getValidationScriptPath()
@@ -270,7 +269,7 @@ class sfFormJqueryValidation
   }
 
   /**
-   * @return  string
+   * @return  bool
    */
   public function getUseJqueryValidation()
   {
@@ -278,12 +277,28 @@ class sfFormJqueryValidation
   }
 
   /**
-   * @param   string  $useJqueryValidation
+   * @param   bool  $useJqueryValidation
    * @return  self
    */
   public function setUseJqueryValidation($useJqueryValidation)
   {
-    $this->useJqueryValidation = $useJqueryValidation;
+    $this->useJqueryValidation = (bool) $useJqueryValidation;
+
+    if ($this->useJqueryValidation)
+    {
+      $formFormatter = $this->getWidgetSchema()->getFormFormatter();
+
+      if (!$formFormatter instanceOf
+          sfWidgetFormSchemaFormatterJqueryValidationInterface
+      )
+      {
+        throw new Exception(
+          'Form Formatter must be an instance of'
+          . ' sfWidgetFormSchemaFormatterJqueryValidationInterface'
+        );
+      }
+    }
+    
     return $this;
   }
 
@@ -316,17 +331,5 @@ class sfFormJqueryValidation
    */
   public function doGenerateJqueryValidation()
   {
-    $this->_addJqueryValidationGlobalMessage();
-  }
-
-  protected function _addJqueryValidationGlobalMessage()
-  {
-    if ($this->getGlobalErrorMessage())
-    {
-//      $this->getJqueryValidationGenerator()->setShowErrorsCallback(
-//        'alert(\'erm\');'
-//      );
-    }
-
   }
 }
