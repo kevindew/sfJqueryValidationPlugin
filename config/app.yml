@@ -9,7 +9,7 @@ default:
     route: sfJqueryValidation     # the route name
     jquery_validation_by_default: true
     minify:       true            # process js files to shrink them
-    minify_method: [sfCombineMinifierJsMin, minify]
+    minify_method: []
     minify_method_options: []
     jquery_validation_script:
       http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.min.js
