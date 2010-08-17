@@ -11,6 +11,13 @@
 class sfJqueryValidationValidatorParserFactory
 {
   /**
+   * Name field
+   *
+   * @var string
+   */
+  protected $_name;
+
+  /**
    * Form field
    *
    * @var sfFormField
@@ -34,17 +41,39 @@ class sfJqueryValidationValidatorParserFactory
   );
 
   /**
+   * @param   string          $name
    * @param   sfFormField     $field
    * @param   sfValidatorBase $validator
    *
    * @return  void
    */
-  public function __construct(sfFormField $field, sfValidatorBase $validator)
+  public function __construct(
+    $name, sfFormField $field, sfValidatorBase $validator
+  )
   {
     $this
+      ->setName($name)
       ->setField($field)
       ->setValidator($validator)
     ;
+  }
+
+  /**
+   * @param   string  $name
+   * @return  self
+   */
+  public function setName($name)
+  {
+    $this->_name = (string) $name;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getName()
+  {
+    return $this->_name;
   }
 
   /**
@@ -129,7 +158,9 @@ class sfJqueryValidationValidatorParserFactory
       throw new Exception('Parser class for validator could not be found');
     }
 
-    $parser = new $parserClass($this->getField(), $this->getValidator());
+    $parser = new $parserClass(
+      $this->getName(), $this->getField(), $this->getValidator()
+    );
 
     return $parser;
   }

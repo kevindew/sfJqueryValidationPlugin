@@ -49,7 +49,7 @@ class sfWidgetFormSchemaFormatterJqueryValidation
                           = "",
     $jqueryValidationErrorPlacementCallback
                           = "
-      element.parent().nextAll('.error-hook').first().after(error);
+      element.parents('.fields').first().nextAll('.error-hook').first().after(error);
     ",
     $jqueryValidationShowErrorsCallback
                           = "",

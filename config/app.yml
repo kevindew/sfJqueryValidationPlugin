@@ -12,4 +12,4 @@ default:
     minify_method: []
     minify_method_options: []
     jquery_validation_script:
-      http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.min.js
+      http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.js

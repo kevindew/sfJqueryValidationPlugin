@@ -248,6 +248,11 @@ class sfFormJqueryValidation
       return parent::getJavaScripts();
     }
 
+    if (!$this->getJqueryValidationGenerator()->getRulesGenerated())
+    {
+      $this->getJqueryValidationGenerator()->generateJavascript();
+    }
+
     return array_merge(
       parent::getJavaScripts(),
       array($this->getValidationScriptPath()),
@@ -261,6 +266,11 @@ class sfFormJqueryValidation
     {
       return parent::getStylesheets();
     }
+
+    if (!$this->getJqueryValidationGenerator()->getRulesGenerated())
+    {
+      $this->getJqueryValidationGenerator()->generateJavascript();
+    }    
 
     return array_merge(
       parent::getStylesheets(),

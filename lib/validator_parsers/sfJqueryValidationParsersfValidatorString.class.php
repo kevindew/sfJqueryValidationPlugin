@@ -9,6 +9,7 @@
 class sfJqueryValidationParsersfValidatorString
   extends sfJqueryValidationParsersfValidatorBase
 {
+  
   /**
    * @see   parent
    */

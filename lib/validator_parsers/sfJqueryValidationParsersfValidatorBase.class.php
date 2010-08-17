@@ -13,6 +13,13 @@
 class sfJqueryValidationParsersfValidatorBase
 {
   /**
+   * Input name field
+   *
+   * @var string
+   */
+  protected $_name;
+  
+  /**
    * @var   sfFormField
    */
   protected $_field;
@@ -46,14 +53,47 @@ class sfJqueryValidationParsersfValidatorBase
   /**
    * Builds a parser
    *
-   * @param sfFormField $field
-   * @param sfValidatorBase $validator
+   * @param   string          $name
+   * @param   sfFormField     $field
+   * @param   sfValidatorBase $validator
+   * @return  void
    */
-  public function __construct(sfFormField $field, sfValidatorBase $validator)
+  public function __construct($name, sfFormField $field, sfValidatorBase $validator)
   {
-    $this->setField($field);
-    $this->setValidator($validator);
+    $this
+      ->setName($name)
+      ->setField($field)
+      ->setValidator($validator)
+      ->configure()
+    ;
     $this->_generateRules();
+  }
+
+  /**
+   * Method to hook into 
+   *
+   * @return void
+   */
+  public function configure()
+  {
+  }
+
+  /**
+   * @param   string  $name
+   * @return  self
+   */
+  public function setName($name)
+  {
+    $this->_name = (string) $name;
+    return $this;
+  }
+
+  /**
+   * @return  string
+   */
+  public function getName()
+  {
+    return $this->_name;
   }
 
   /**
@@ -110,20 +150,70 @@ class sfJqueryValidationParsersfValidatorBase
     return $this;
   }
 
+  public function getRulesByName($name = null)
+  {
+    if ($name === null)
+    {
+      $name = $this->getName();
+    }
+
+    $existingRules = $this->getRules();
+
+    return isset($existingRules[$name]) ? $existingRules[$name] : array();
+  }
+
+  public function setRulesByName(array $rules, $name = null)
+  {
+    if ($name === null)
+    {
+      $name = $this->getName();
+    }
+
+    $existingRules = $this->getRules();
+
+    $existingRules[$name] = $rules;
+    
+    $this->setRules($existingRules);
+
+    return $this;
+  }
+
   /**
    * Add a rule
    *
-   * @param   string                          $name
+   * @param   string                          $ruleName
    * @param   sfJqueryValidationValidatorRule $rule
    * @return  self
    */
-  public function addRule($name, sfJqueryValidationValidatorRule $rule)
+  public function addRule(
+    $ruleName,
+    sfJqueryValidationValidatorRule $rule,
+    $name = null
+  )
   {
-    $rules = $this->getRules();
-    $rules[$name] = $rule;
-    $this->setRules($rules);
+    $rules = $this->getRulesByName($name);
+    $rules[$ruleName] = $rule;
+    $this->setRulesByName($rules, $name);
 
     return $this;
+  }
+
+  /**
+   * Get a rule
+   *
+   * @param   string  $name
+   * @return  sfJqueryValidationValidatorRule
+   * @throws  Exception
+   */
+  public function getRule($ruleName, $name = null)
+  {
+    $rules = $this->getRulesByName($name);
+    if (!isset($rules[$ruleName]))
+    {
+      throw new Exception('Rule ' . $ruleName . ' does not exist');
+    }
+
+    return $rules[$ruleName];
   }
 
   /**
@@ -132,11 +222,11 @@ class sfJqueryValidationParsersfValidatorBase
    * @param   string  $name
    * @return  self
    */
-  public function removeRule($name)
+  public function removeRule($ruleName, $name = null)
   {
-    $rules = $this->getRules();
-    unset($rules[$name]);
-    $this->setRules($rules);
+    $rules = $this->getRulesByName($name);
+    unset($rules[$ruleName]);
+    $this->setRulesByName($rules);
 
     return $this;
   }
@@ -200,7 +290,7 @@ class sfJqueryValidationParsersfValidatorBase
 
     $message = str_replace(array_keys($replace), $replace,$message);
     
-    return 'function(ruleParams, element) {return ' . $message . ';}';
+    return 'function(ruleParams, element) { return ' . $message . ';}';
   }
 
   /**
@@ -220,9 +310,9 @@ class sfJqueryValidationParsersfValidatorBase
    *
    * @return  self
    */
-  public function setJavascripts($javascripts)
+  public function setJavascripts(array $javascripts)
   {
-    $this->_javascripts = $javascripts;
+    $this->_javascripts = array_unique($javascripts);
     return $this;
   }
 
@@ -237,13 +327,15 @@ class sfJqueryValidationParsersfValidatorBase
   }
 
   /**
-   * Get an array of stylesheet paths
+   * Set an array of stylesheet paths
    *
-   * @return  array
+   * @param   array   $stylesheets
+   *
+   * @return  self
    */
-  public function setStylesheets($stylesheets)
+  public function setStylesheets(array $stylesheets)
   {
-    $this->_stylesheets = $stylesheets;
+    $this->_stylesheets = array_unique($stylesheets);
     return $this;
   }
   

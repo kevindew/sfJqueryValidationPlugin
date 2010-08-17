@@ -205,11 +205,9 @@ EOF;
   /**
    * Generates the javascript rules for the validation
    *
-   * @param   array   $extraOptions
-   *
    * @return  string
    */
-  public function generateJavascript(array $extraOptions = array())
+  public function generateJavascript()
   {
 
     if (!$this->getFormFormattingOptionsGenerated())
@@ -269,7 +267,7 @@ EOF;
     }
 
 
-    $options = array_merge($this->getOptions(), $rules, $callbacks, $extraOptions);
+    $options = array_merge($this->getOptions(), $rules, $callbacks);
 
 
     $script = strtr(
@@ -348,7 +346,11 @@ EOF;
     // field might be field holding more fields
     $field = $this->_getFirstFormField($field);
 
-    return $field->renderId();
+    // we need to set the id format otherwise it might be wrong
+    $widget = clone $field->getWidget();
+    $widget->setIdFormat($this->getForm()->getWidgetSchema()->getIdFormat());
+
+    return $widget->generateId($field->renderName());
   }
 
   /**
@@ -415,6 +417,7 @@ EOF;
   {
     foreach($formFieldSchema as $name => $field)
     {
+
       if ($field instanceof sfFormFieldSchema)
       {
         // check validator schema
@@ -427,7 +430,7 @@ EOF;
           throw new Exception('Validator isn\'t an instance of sfValidatorSchema');
         }
 
-        return $this->_recursiveGenerateFieldsAndValidator(
+        $this->_recursiveGenerateFieldsAndValidator(
           $field,
           $validatorSchema[$name],
           $reset
@@ -451,23 +454,27 @@ EOF;
       }
 
       $factory = new sfJqueryValidationValidatorParserFactory(
+        $field->renderName(),
         $field,
         $validatorSchema[$name]
       );
       $parser = $factory->getParser();
 
-      if ($reset)
-      {
-        $this->setFieldRules(
-          $field->renderName(), $parser->getRules()
-        );
-      }
-      else
-      {
-        $this->mergeFieldRules(
-          $field->renderName(), $parser->getRules(), $overwrite
-        );
-      }
+      foreach ($parser->getRules() as $fieldName => $rules) {
+        if ($reset)
+        {
+          
+          $this->setFieldRules(
+            $fieldName, $rules
+          );
+        }
+        else
+        {
+          $this->mergeFieldRules(
+            $fieldName, $rules
+          );
+        }
+      }      
 
       $this->setJavascripts(
         array_merge($this->getJavascripts(), $parser->getJavascripts())
