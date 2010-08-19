@@ -1,15 +1,14 @@
 <?php
 /**
- * sfJqueryValidationParsersfValidationString
+ * sfJqueryValidationParsersfValidationNumber
  *
  * @package     sfJqueryValidationPlugin
  * @subpackage  Parser
  * @author      Kevin Dew  <kev@dewsolutions.co.uk>
  */
-class sfJqueryValidationParsersfValidatorString
+class sfJqueryValidationParsersfValidatorNumber
   extends sfJqueryValidationParsersfValidatorBase
 {
-  
   /**
    * @see   parent
    */
@@ -17,18 +16,34 @@ class sfJqueryValidationParsersfValidatorString
   {
     parent::_generateRules();
 
-    if ($this->getValidator()->hasOption('max_length'))
+    // match int by regular experession
+    $this->addRule(
+      'number',
+      new sfJqueryValidationValidatorRule(
+        'true',
+        $this->generateMessageJsFunctionReplace(
+          $this->getValidator()->getMessage('invalid'),
+          array(
+            '%value%' => sfJqueryValidationParsersfValidatorBase::PRINT_JQUERY_VALUE,
+          )
+        ),
+        sfJqueryValidationValidatorRule::STR_RAW,
+        sfJqueryValidationValidatorRule::STR_RAW
+      )
+    );
+
+    if ($this->getValidator()->hasOption('max'))
     {
 
       $this->addRule(
-        'maxlength',
+        'max',
         new sfJqueryValidationValidatorRule(
-          $this->getValidator()->getOption('max_length'),
+          $this->getValidator()->getOption('max'),
           $this->generateMessageJsFunctionReplace(
-            $this->getValidator()->getMessage('max_length'),
+            $this->getValidator()->getMessage('max'),
             array(
               '%value%' => sfJqueryValidationParsersfValidatorBase::PRINT_JQUERY_VALUE,
-              '%max_length%' => 'ruleParams'
+              '%max%' => 'ruleParams'
             )
           ),
           sfJqueryValidationValidatorRule::STR_RAW,
@@ -37,17 +52,18 @@ class sfJqueryValidationParsersfValidatorString
       );
     }
 
-    if ($this->getValidator()->hasOption('min_length'))
+    if ($this->getValidator()->hasOption('min'))
     {
+
       $this->addRule(
-        'minlength',
+        'min',
         new sfJqueryValidationValidatorRule(
-          $this->getValidator()->getOption('min_length'),
+          $this->getValidator()->getOption('min'),
           $this->generateMessageJsFunctionReplace(
-            $this->getValidator()->getMessage('min_length'),
+            $this->getValidator()->getMessage('min'),
             array(
               '%value%' => sfJqueryValidationParsersfValidatorBase::PRINT_JQUERY_VALUE,
-              '%min_length%' => 'ruleParams'
+              '%min%' => 'ruleParams'
             )
           ),
           sfJqueryValidationValidatorRule::STR_RAW,

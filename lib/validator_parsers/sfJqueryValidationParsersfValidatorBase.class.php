@@ -12,6 +12,10 @@
  */
 class sfJqueryValidationParsersfValidatorBase
 {
+  
+  const PRINT_JQUERY_VALUE
+    = 'jQuery(\'<div />\').text(jQuery(element).val()).html()';
+
   /**
    * Input name field
    *
@@ -291,6 +295,18 @@ class sfJqueryValidationParsersfValidatorBase
     $message = str_replace(array_keys($replace), $replace,$message);
     
     return 'function(ruleParams, element) { return ' . $message . ';}';
+  }
+
+  /**
+   * Convert an array of values to a javascript array 
+   *
+   * @param   array   $range  An array of values to become range
+   * @return  string
+   */
+  public static function buildRange(array $range)
+  {
+    // turn array into associative array
+    return json_encode(array_unique(array_values($range)));
   }
 
   /**

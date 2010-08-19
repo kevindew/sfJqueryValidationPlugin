@@ -1,13 +1,13 @@
 <?php
 /**
- * sfJqueryValidationParsersfValidationRegex
+ * sfJqueryValidationParsersfValidationInteger
  *
  * @package     sfJqueryValidationPlugin
  * @subpackage  Parser
  * @author      Kevin Dew  <kev@dewsolutions.co.uk>
  */
-class sfJqueryValidationParsersfValidatorRegex
-  extends sfJqueryValidationParsersfValidatorString
+class sfJqueryValidationParsersfValidatorInteger
+  extends sfJqueryValidationParsersfValidatorNumber
 {
 
   /**
@@ -30,21 +30,25 @@ class sfJqueryValidationParsersfValidatorRegex
   {
     parent::_generateRules();
 
+    $this->removeRule('number');
+
+
+    // match int by regular experession
     $this->addRule(
-      ($this->getValidator()->getOption('must_match') ? 'regex' : 'regexFail'),
+      'regex',
       new sfJqueryValidationValidatorRule(
-        $this->getValidator()->getPattern(),
+        '/^-?[0-9]+$/',
         $this->generateMessageJsFunctionReplace(
           $this->getValidator()->getMessage('invalid'),
           array(
-            '%value%' => sfJqueryValidationParsersfValidatorBase::PRINT_JQUERY_VALUE
+            '%value%' => sfJqueryValidationParsersfValidatorBase::PRINT_JQUERY_VALUE,
           )
         ),
         sfJqueryValidationValidatorRule::STR_RAW,
         sfJqueryValidationValidatorRule::STR_RAW
       )
     );
-  }
 
-  
+    
+  }
 }
