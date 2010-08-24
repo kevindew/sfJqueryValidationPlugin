@@ -62,7 +62,7 @@ class sfJqueryValidationValidatorParserFactory
    * @param   string  $name
    * @return  self
    */
-  public function setName($name)
+  public function setName($name = null)
   {
     $this->_name = (string) $name;
     return $this;

@@ -275,7 +275,7 @@ EOF;
       array(
         '%form_accessor_id%' => addcslashes($this->_getFormAccessorId(), "'"),
         '%user_script%' => $this->getUserJavascript(),
-        '%options%' => $this->_generateJavascriptObject($options)
+        '%options%' => $this->generateJavascriptObject($options)
       )
     );
 
@@ -448,7 +448,7 @@ EOF;
       }
 
       // no need to generate for hidden widgets
-      if ($field->getWidget() instanceof sfWidgetInputHidden)
+      if ($field->getWidget() instanceof sfWidgetFormInputHidden)
       {
         continue;
       }
@@ -693,7 +693,7 @@ EOF;
    *
    * @return  string
    */
-  protected function _generateJavascriptObject(array $array, $linePrefix = '')
+  public static function generateJavascriptObject(array $array, $linePrefix = '')
   {
     $return = array();
 
@@ -701,7 +701,7 @@ EOF;
     {
       if (is_array($value))
       {
-        $string = $this->_generateJavascriptObject($value, $linePrefix . '  ');
+        $string = self::generateJavascriptObject($value, $linePrefix . '  ');
       }
       else
       {
@@ -760,7 +760,7 @@ EOF;
       $return[$field] = $rulesArr;
     }
 
-    return $this->_generateJavascriptObject($return, '  ');
+    return $this->generateJavascriptObject($return, '  ');
   }
 
   /**
@@ -804,7 +804,7 @@ EOF;
       $return[$field] = $messagesArr;
     }
 
-    return $this->_generateJavascriptObject($return, '  ');
+    return $this->generateJavascriptObject($return, '  ');
   }
 
   /**
