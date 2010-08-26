@@ -1,12 +1,12 @@
 <?php
 /**
- * sfJqueryValidationParsersfValidationOr
+ * sfJqueryValidationParsersfValidationAnd
  *
  * @package     sfJqueryValidationPlugin
  * @subpackage  Parser
  * @author      Kevin Dew  <kev@dewsolutions.co.uk>
  */
-class sfJqueryValidationParsersfValidatorOr
+class sfJqueryValidationParsersfValidatorAnd
   extends sfJqueryValidationParsersfValidatorBase
 {
 
@@ -49,7 +49,7 @@ class sfJqueryValidationParsersfValidatorOr
       );
     }
 
-    $this->addRule('or', $ruleSchema);
+    $this->addRule('and', $ruleSchema);
 
   }
 

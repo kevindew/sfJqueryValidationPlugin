@@ -11,12 +11,39 @@
 class sfJqueryValidationValidatorRuleSchema 
   extends sfJqueryValidationValidatorRule
 {
-//  protected $_rules = array();
 
+  /**
+   * @var string
+   */
   protected $_name;
+
+  /**
+   * @var sfFormField
+   */
   protected $_field;
+
+  /**
+   * Collection of sfValidatorBase objects
+   *
+   * @var array
+   */
   protected $_validators = array();
 
+
+  /**
+   * A collection of validation parsers
+   *
+   * @var array
+   */
+  protected $_parserCollection;
+
+  /**
+   * @param   string      $name
+   * @param   sfFormField $field
+   * @param   array       $validators
+   *
+   * @return  void
+   */
   public function __construct(
     $name, sfFormField $field, array $validators)
   {
@@ -27,76 +54,70 @@ class sfJqueryValidationValidatorRuleSchema
     ;
   }
 
+  /**
+   * @return  string
+   */
   public function getName()
   {
     return $this->_name;
   }
 
+  /**
+   * @param   string  $name
+   * @return  self
+   */
   public function setName($name)
   {
     $this->_name = $name;
     return $this;
   }
 
+  /**
+   * @return  sfFormField
+   */
   public function getField()
   {
     return $this->_field;
   }
 
-  public function setField($field)
+  /**
+   * @param   sfFormField   $field
+   * @return  self
+   */
+  public function setField(sfFormField $field)
   {
     $this->_field = $field;
     return $this;
   }
 
+  /**
+   * @return  array
+   */
   public function getValidators()
   {
     return $this->_validators;
   }
 
-  public function setValidators($validators)
+  /**
+   * @param   array   $validators
+   * @return  self
+   */
+  public function setValidators(array $validators)
   {
     $this->_validators = $validators;
     return $this;
   }
 
-
-
-//  /**
-//   * @return  array
-//   */
-//  public function getRules()
-//  {
-//    return $this->_rules;
-//  }
-//
-//  /**
-//   * @param   array $rules
-//   * @return  self
-//   */
-//  public function setRules(array $rules)
-//  {
-//    $this->_rules = $rules;
-//    return $this;
-//  }
-
+  /**
+   * @see     parent
+   * @param   string  $indent   How much to indent the output
+   * @return  string
+   */
   public function getRule($indent = '      ')
   {
-    $parsers = array();
-
-    foreach ($this->getValidators() as $validator) {
-      $parserFactory = new sfJqueryValidationValidatorParserFactory(
-        $this->getName(),
-        $this->getField(),
-        $validator
-      );
-
-      $parsers[] = $parserFactory->getParser();
-    }
-
     $ruleCollection = array();
 
-    foreach ($parsers as $parser)
+    foreach ($this->_getParserCollection() as $parser)
     {
       $rules = array();
 
@@ -116,8 +137,112 @@ class sfJqueryValidationValidatorRuleSchema
     return '[' . implode(', ', $ruleCollection) . ']';
   }
 
-  public function  getMessage()
+  /**
+   * @see     parent
+   * @return  string
+   */
+  public function getMessage($indent = '      ')
   {
-    return '"invalid"';
+    if (parent::getMessage() !== null)
+    {
+      return parent::getMessage();
+    }
+
+    $messageCollection = array();
+
+    foreach ($this->_getParserCollection() as $parser)
+    {
+      $rules = array();
+
+      foreach ($parser->getRulesByName($this->getName()) as $name => $rule)
+      {
+        $rules[$name] = $rule->getMessage();
+      }
+
+      if ($rules)
+      {
+        $messageCollection[] =
+          sfJqueryValidationGenerator::generateJavascriptObject($rules, $indent)
+        ;
+      }
+    }
+
+    $messagesJsObject = '[' . implode(', ', $messageCollection) . ']';
+
+    return $this->_buildJsMessageParser($messagesJsObject);
+    
+  }
+
+  /**
+   * Get an array of parsers
+   *
+   * @param   bool    $rebuild
+   * @return  array
+   */
+  protected function _getParserCollection($rebuild = false)
+  {
+    if ($this->_parserCollection === null || $rebuild)
+    {
+      $this->_parserCollection = array();
+
+      foreach ($this->getValidators() as $validator) {
+        $parserFactory = new sfJqueryValidationValidatorParserFactory(
+          $this->getName(),
+          $this->getField(),
+          $validator
+        );
+
+        $this->_parserCollection[] = $parserFactory->getParser();
+      }
+    }
+
+    return $this->_parserCollection;
+  }
+
+  protected function _buildJsMessageParser($messagesJsObject)
+  {
+    $backupMessage = "'Invalid.'";
+
+    $javascript = <<<EOT
+function (ruleParams, element) {
+  var messages = $messagesJsObject;
+  var backupMessage = $backupMessage;
+
+  if (typeof $(element).data('jqValError') !== 'object') {
+    return backupMessage;
+  }
+
+  var jqValErrorArr = $(element).data('jqValError');
+
+  var first;
+
+  while (typeof (first = jqValErrorArr.shift()) != 'undefined') {
+    if (typeof messages[first] == 'undefined') {
+      break;
+    }
+
+    messages = messages[first];
+    
+    if (typeof messages == 'function') {
+      return messages.call(this, ruleParams, element);
+    } else if (typeof messages == 'string') {
+      var theregex = /\\$?\{(\d+)\}/g;
+      if (theregex.test(messages)) {
+        messages = jQuery.format(messages.replace(theregex, '{\$1}'), ruleParams);
+      }
+      return messages;
+    }
+
+
+  }
+
+  return backupMessage;
+}
+
+EOT;
+
+    return $javascript;
+
+
   }
 }
