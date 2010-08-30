@@ -2,7 +2,7 @@
 /**
  * sfJqueryValidationValidatorRule
  *
- * Stores a validation rule and message
+ * Stores a validation rule, message and group
  *
  * @package     sfJqueryValidationPlugin
  * @subpackage  ValidatorRule

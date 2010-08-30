@@ -47,6 +47,14 @@ class sfJqueryValidationGenerator
   protected $_rules = array();
 
   /**
+   * A collection arrays of groups in form of:
+   *  array($groupName => array($fieldName1, $fieldName2, etc)
+   *
+   * @var array
+   */
+  protected $_groups = array();
+
+  /**
    * Whether rules have been generated yet
    *
    * @var boolean
@@ -234,6 +242,11 @@ EOF;
       'messages' => $this->getMessagesString()
     );
 
+    if ($this->getGroupsString())
+    {
+      $rules['groups'] = $this->getGroupsString();
+    }
+
     $callbacks = array();
 
     if ($this->getSubmitHandlerCallback())
@@ -378,18 +391,11 @@ EOF;
    *
    * @return  void
    */
-  public function generateRules($reset = false, $overwrite = false)
+  public function generateRules()
   {
-    if (!$reset)
-    {
-      $this->_rules = array();
-    }
-
     $this->_recursiveGenerateFieldsAndValidator(
       $this->getForm()->getFormFieldSchema(),
-      $this->getForm()->getValidatorSchema(),
-      $reset,
-      $overwrite
+      $this->getForm()->getValidatorSchema()
     );
 
     $this->setRulesGenerated(true);
@@ -410,9 +416,7 @@ EOF;
    */
   protected function _recursiveGenerateFieldsAndValidator(
     sfFormFieldSchema $formFieldSchema,
-    sfValidatorSchema $validatorSchema,
-    $reset = false,
-    $overwrite = false
+    sfValidatorSchema $validatorSchema
   )
   {
     foreach($formFieldSchema as $name => $field)
@@ -432,8 +436,7 @@ EOF;
 
         $this->_recursiveGenerateFieldsAndValidator(
           $field,
-          $validatorSchema[$name],
-          $reset
+          $validatorSchema[$name]
         );
       }
 
@@ -447,12 +450,6 @@ EOF;
         throw new Exception('Validation isn\'t an instance of sfValidatorBase');
       }
 
-      // no need to generate for hidden widgets
-      if ($field->getWidget() instanceof sfWidgetFormInputHidden)
-      {
-        continue;
-      }
-
       $factory = new sfJqueryValidationValidatorParserFactory(
         $field->renderName(),
         $field,
@@ -460,21 +457,17 @@ EOF;
       );
       $parser = $factory->getParser();
 
-      foreach ($parser->getRules() as $fieldName => $rules) {
-        if ($reset)
-        {
-          
-          $this->setFieldRules(
-            $fieldName, $rules
-          );
-        }
-        else
-        {
-          $this->mergeFieldRules(
-            $fieldName, $rules
-          );
-        }
-      }      
+      foreach ($parser->getRules() as $fieldName => $rules)
+      {          
+        $this->setFieldRules(
+          $fieldName, $rules
+        );
+      }
+
+      foreach ($parser->getGroups() as $groupName => $fields)
+      {
+        $this->setGroup($groupName, $fields);
+      }
 
       $this->setJavascripts(
         array_merge($this->getJavascripts(), $parser->getJavascripts())
@@ -489,7 +482,7 @@ EOF;
   /**
    * Get the rules array
    *
-   * in form of array('field' => array('rule' => $ruleObj))
+   * in form of array($field => array($rule => $ruleObj))
    *
    * @return  array
    */
@@ -508,6 +501,31 @@ EOF;
   public function setRules(array $rules)
   {
     $this->_rules = $rules;
+    return $this;
+  }
+
+  /**
+   * Get the groups array
+   *
+   * in form of array($groupName => array($fieldName1, $fieldName2, etc))
+   *
+   * @return  array
+   */
+  public function getGroups()
+  {
+    return $this->_groups;
+  }
+
+
+  /**
+   * Set the groups array
+   *
+   * @param   array   $groups
+   * @return  self
+   */
+  public function setGroups(array $groups)
+  {
+    $this->_groups = $groups;
     return $this;
   }
 
@@ -560,7 +578,6 @@ EOF;
     ;
     return $this;
   }
-
 
   /**
    * Set the rules for a field
@@ -663,24 +680,53 @@ EOF;
   }
 
   /**
-   * Remove a rule for a field
+   * Get the array of fields for a group
    *
-   * @param   string  $fieldName
-   * @param   string  $ruleName
+   * @param   string $name
+   * @return  array
+   */
+  public function getGroup($name)
+  {
+    $groups = $this->getGroups();
+    
+    return isset($groups[$name]) ? $groups[$name] : array();
+  }
+  
+  /**
+   * Set the array of fields for a group
    *
+   * @param   string  $name
+   * @param   array   $fields
    * @return  self
    */
-  public function removeFieldRule(
-    $fieldName, $ruleName)
+  public function setGroup($name, array $fields)
   {
-    $rules = $this->getFieldRules($fieldName);
-
-    if ($rules)
-    {
-      unset($rules[$ruleName]);
-    }
-
+    $groups = $this->getGroups();
+    
+    $groups[$name] = $fields;
+    
+    $this->setGroups($groups);
+    
     return $this;
+  }
+  
+  /**
+   * Remove a group
+   *
+   * @param   string  $name
+   * @return  self
+   */
+  public function removeGroup($name)
+  {
+    $groups = $this->getGroups();
+    
+    if (!isset($groups[$name]))
+    {
+      unset($groups[$name]);
+      $this->setGroups($groups);
+    }
+    
+    return this;
   }
 
   /**
@@ -777,6 +823,7 @@ EOF;
     // convert rules into an array
     foreach ($this->getRules() as $field => $rules)
     {
+      
       $messagesArr = array();
 
       if (!count($rules))
@@ -802,6 +849,38 @@ EOF;
       }
 
       $return[$field] = $messagesArr;
+    }
+
+    return $this->generateJavascriptObject($return, '  ');
+  }
+
+  /**
+   * Get all the groups as a string of a javascript object for outputting
+   *
+   * @return  string
+   */
+  public function getGroupsString()
+  {
+    $return = array();
+
+    // convert groups into an array
+    foreach ($this->getGroups() as $groupName => $fields)
+    {
+      if (!$fields)
+      {
+        continue;
+      }
+
+      if (is_string($fields))
+      {
+        $return[$groupName] = '"' . $fields . '"';
+        continue;
+      }
+
+      if (is_array($fields))
+      {
+        $return[$groupName] = '"' . implode(' ', $fields) . '"';
+      }
     }
 
     return $this->generateJavascriptObject($return, '  ');

@@ -205,40 +205,15 @@ class sfJqueryValidationValidatorRuleSchema
 
     $javascript = <<<EOT
 function (ruleParams, element) {
-  var messages = $messagesJsObject;
-  var backupMessage = $backupMessage;
-
-  if (typeof $(element).data('jqValError') !== 'object') {
-    return backupMessage;
-  }
-
-  var jqValErrorArr = $(element).data('jqValError');
-
-  var first;
-
-  while (typeof (first = jqValErrorArr.shift()) != 'undefined') {
-    if (typeof messages[first] == 'undefined') {
-      break;
-    }
-
-    messages = messages[first];
-    
-    if (typeof messages == 'function') {
-      return messages.call(this, ruleParams, element);
-    } else if (typeof messages == 'string') {
-      var theregex = /\\$?\{(\d+)\}/g;
-      if (theregex.test(messages)) {
-        messages = jQuery.format(messages.replace(theregex, '{\$1}'), ruleParams);
-      }
-      return messages;
-    }
-
-
-  }
-
-  return backupMessage;
+  return $.validator.sfJqueryValidationPlugin.parseMessagesFromElementData.call(
+    this,
+    ruleParams,
+    element,
+    $messagesJsObject,
+    $backupMessage,
+    'jqValError'
+  );
 }
-
 EOT;
 
     return $javascript;

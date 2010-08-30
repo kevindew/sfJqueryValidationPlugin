@@ -313,7 +313,7 @@ class sfFormJqueryValidation
   }
 
   /**
-   * @return  sfJqueryValidation|null
+   * @return  sfJqueryValidationGenerator
    */
   public function getJqueryValidationGenerator()
   {

@@ -36,9 +36,32 @@ class sfJqueryValidationParsersfValidatorBase
   /**
    * The rules for this field
    *
+   * Stored in format of:
+   * array(
+   *  fieldName => array(
+   *    ruleName => ruleObject
+   *  )
+   * )
+   *
    * @var   array
    */
   protected $_rules = array();
+
+  /**
+   * The groups for this field
+   *
+   * Stored in format of: 
+   * array(
+   *  groupName => array(
+   *    fieldName1,
+   *    fieldName2,
+   *    etc
+   *  )
+   * )
+   *
+   * @var   array
+   */
+  protected $_groups = array();
 
   /**
    * An array of javascripts
@@ -154,6 +177,12 @@ class sfJqueryValidationParsersfValidatorBase
     return $this;
   }
 
+  /**
+   * Get the rules for a particular field name
+   *
+   * @param   string  $name
+   * @return  array
+   */
   public function getRulesByName($name = null)
   {
     if ($name === null)
@@ -166,6 +195,13 @@ class sfJqueryValidationParsersfValidatorBase
     return isset($existingRules[$name]) ? $existingRules[$name] : array();
   }
 
+  /**
+   * Set the rules for a particular field name
+   *
+   * @param   array   $rules
+   * @param   string  $name
+   * @return  self
+   */
   public function setRulesByName(array $rules, $name = null)
   {
     if ($name === null)
@@ -236,6 +272,55 @@ class sfJqueryValidationParsersfValidatorBase
   }
 
   /**
+   * @return  array
+   */
+  public function getGroups()
+  {
+    return $this->_groups;
+  }
+
+  /**
+   * @param   array $groups
+   * @return  self
+   */
+  public function setGroups(array $groups)
+  {
+    $this->_groups = $groups;
+    return $this;
+  }
+
+  /**
+   * Get a group
+   *
+   * @param   string  $name
+   * @return  array
+   */
+  public function getGroup($name)
+  {
+    $existingGroups = $this->getGroups();
+
+    return isset($existingGroups[$name]) ? $existingGroups[$name] : array();
+  }
+
+  /**
+   * Set a group
+   *
+   * @param   string  $name
+   * @param   array   $groups
+   * @return  self
+   */
+  public function setGroup($name, array $groups)
+  {
+    $existingGroups = $this->getGroups();
+
+    $existingGroups[$name] = $groups;
+
+    $this->setGroups($existingGroups);
+
+    return $this;
+  }
+
+  /**
    * Generate the rules for this field
    *
    * @return  void
@@ -252,15 +337,24 @@ class sfJqueryValidationParsersfValidatorBase
         'required',
         new sfJqueryValidationValidatorRule(
           'true',
-           $this->getValidator()->getMessage('required'),
-           sfJqueryValidationValidatorRule::STR_RAW
+           $this->getValidator()->getMessage('required')
         )
       );
     }
   }
 
   /**
+   * Used to generate a javascript function to return a message.
    *
+   * Typical input
+   * - $message: "%value% is invalid
+   * - $replace: array('%value%' => 'jQuery(element).val()')
+   * Output
+   * - function(ruleParams, element) { return jQuery(element).val() + " is invalid" }
+   *
+   * @param   string  $message    The raw message
+   * @param   array   $replace
+   * @return  string
    */
   public static function generateMessageJsFunctionReplace(
     $message,
