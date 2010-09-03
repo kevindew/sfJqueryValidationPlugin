@@ -156,6 +156,148 @@
   );
 
   /**
+   * Validate if an array date is correct
+   */
+  $.validator.addMethod(
+    'validArrayDate',
+    function(value, element, required) {
+      return this.optional(element)
+        || $.validator.sfJqueryValidationPlugin.buildArrayDate.call(this, element)
+      ;
+
+    },
+    'Invalid.'
+  );
+
+  /**
+   * Validate an array date to see if it meets a minimum
+   */
+  $.validator.addMethod(
+    'minArrayDate',
+    function(value, element, timestamp) {
+
+			if (this.optional(element)) {
+				return "dependency-mismatch";
+      }
+
+      try {
+        var date = $.validator.sfJqueryValidationPlugin.buildArrayDate.call(
+          this, element
+        );
+
+        if (date === false) {
+          return false;
+        }
+
+        if (typeof date != 'object') {
+          throw "Date not returned"
+        }
+
+        var checkDate = new Date(timestamp * 1000);
+
+        return date >= checkDate
+
+
+      } catch (error) {
+        return "pending";
+      }
+    },
+    'Please select a later date.'
+  );
+
+  /**
+   * Validate an array date to see if it meets a maximum
+   */
+  $.validator.addMethod(
+    'maxArrayDate',
+    function(value, element, timestamp) {
+
+			if (this.optional(element)) {
+				return "dependency-mismatch";
+      }
+
+      try {
+        var date = $.validator.sfJqueryValidationPlugin.buildArrayDate.call(
+          this, element
+        );
+
+        if (date === false) {
+          return false;
+        }
+
+        if (typeof date != 'object') {
+          throw "Date not returned"
+        }
+
+        var checkDate = new Date(timestamp * 1000);
+
+        return date <= checkDate
+
+
+      } catch (error) {
+        return "pending";
+      }
+    },
+    'Please select an earlier date.'
+  );
+
+  /**
+   * Check if a value is an array of choices
+   */
+  $.validator.addMethod(
+    'choice',
+    function(value, element, choices) {
+      return this.optional(element) || ($.inArray(value, choices) >= 0)
+    },
+    'Required.'
+  );
+
+  /**
+   * Validate a text date to see if it meets a minimum
+   */
+  $.validator.addMethod(
+    'minDate',
+    function(value, element, timestamp) {
+
+			if (this.optional(element)) {
+				return "dependency-mismatch";
+      }
+
+      try {
+
+        return new Date(value) >= new Date(timestamp * 1000);
+
+
+      } catch (error) {
+        return "pending";
+      }
+    },
+    'Please select a later date.'
+  );
+
+  /**
+   * Validate a text date to see if it meets a maximum
+   */
+  $.validator.addMethod(
+    'maxDate',
+    function(value, element, timestamp) {
+
+			if (this.optional(element)) {
+				return "dependency-mismatch";
+      }
+
+      try {
+
+        return new Date(value) <= new Date(timestamp * 1000);
+
+      } catch (error) {
+        return "pending";
+      }
+    },
+    'Please select a later date.'
+  );
+
+  /**
    * Methods for the validator object itself
    */
   if (typeof $.validator.sfJqueryValidationPlugin == 'undefined') {
@@ -207,5 +349,100 @@
     }
 
     return backupMessage;
+  }
+
+  $.validator.sfJqueryValidationPlugin.buildArrayDate = function (element) {
+
+    var
+      name = $(element).attr('name'),
+      fieldNames = ['year', 'month', 'day', 'hour', 'minute', 'second'],
+      form = $(element).parents('form').first(),
+      fields = {},
+      allBlank = true,
+      allFilled = true,
+      returnError = true,
+      i
+    ;
+
+    $(element).data('checkedsfJqueryValidationDate', true);
+
+    // need to strip the date part of the array off
+    name = name.replace(/\[(year|month|day|hour|minute|second)\]/, '');
+
+    // loop through the fields, put them into an object and do some preliminary
+    // checks
+    for (i = 0; i < fieldNames.length; i++) {
+      fields[fieldNames[i]]
+        = $('[name="' + name + '[' + fieldNames[i] + ']"]', form).first()
+      ;
+
+      // only check a field that exists
+      if (fields[fieldNames[i]].length) {
+        var value = fields[fieldNames[i]].val();
+
+        if (value !== '') {
+          allBlank = false;
+        }
+
+        // we're assuming the second field isn't required
+        if (fieldNames[i] != 'second') {
+          if (value === '') {
+            allFilled = false;
+          }
+
+          if (!(
+            fields[fieldNames[i]].data('checkedsfJqueryValidationDate')
+            &&
+            (value === '' && !this.optional(fields[fieldNames[i]].get(0)))
+          )) {
+            returnError = false;
+          }
+        }
+      }
+    }
+
+    // return pending because this condition requires other fields to change
+    if (
+      allBlank
+      ||
+      !allFilled && !returnError
+    ) {
+      return "pending";
+    }
+
+    if (!allFilled) {
+      return false;
+    }
+
+    // build date
+
+    // to work out a date we need atleast the month and the year
+    try {
+
+      if (
+        !fields['year'].length
+        ||
+        !fields['month'].length
+      ) {
+          throw "Can't work out date without a year or month";
+      }
+
+      var year = fields['year'].val();
+      var month = fields['month'].val();
+      var day = fields['day'].length ? fields['day'].val() : 1;
+      var hour = fields['hour'].length ? fields['hour'].val() : 0;
+      var minute = fields['minute'].length ? fields['minute'].val() : 0;
+      var second = fields['second'].length ? fields['second'].val() : 0;
+
+      var date = new Date(year, month, day, hour, minute, second);
+
+      return date;
+
+    } catch (error) {
+      console.log(error);
+      return "pending";
+    }
+
+
   }
 })(jQuery);
