@@ -394,13 +394,13 @@ class sfJqueryValidationParsersfValidatorBase
   /**
    * Convert an array of values to a javascript array 
    *
-   * @param   array   $range  An array of values to become range
+   * @param   array   $choices  An array of values to become choices
    * @return  string
    */
-  public static function buildRange(array $range)
+  public static function buildChoices(array $choices)
   {
     // turn array into associative array
-    return json_encode(array_unique(array_values($range)));
+    return json_encode(array_unique(array_values($choices)));
   }
 
   /**
