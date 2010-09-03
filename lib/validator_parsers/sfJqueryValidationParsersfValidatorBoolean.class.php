@@ -9,7 +9,20 @@
 class sfJqueryValidationParsersfValidatorBoolean
   extends sfJqueryValidationParsersfValidatorBase
 {
-  
+
+  /**
+   * @see   parent
+   */
+  public function configure()
+  {
+    parent::configure();
+
+    $this->setJavascripts(array_merge(
+       $this->getJavascripts(),
+       array('/sfJqueryValidationPlugin/js/jquery.validation.extensions.js')
+    ));
+  }
+
   /**
    * @see   parent
    */
@@ -17,16 +30,16 @@ class sfJqueryValidationParsersfValidatorBoolean
   {
     parent::_generateRules();
 
-    $range = array_merge(
+    $choices = array_merge(
       $this->getValidator()->getOption('true_values'),
       $this->getValidator()->getOption('false_values')
     );
 
 
     $this->addRule(
-      'range',
+      'choice',
       new sfJqueryValidationValidatorRule(
-        $this->buildRange($range),
+        $this->buildChoices($choices),
         $this->generateMessageJsFunctionReplace(
           $this->getValidator()->getMessage('invalid'),
           array(
