@@ -28,23 +28,38 @@ class sfJqueryValidationParsersfValidatorDate
    */
   protected function _generateRules()
   {
-    if ($this->getField()->getWidget() instanceof sfWidgetFormDate)
+    if (
+      $this->getField()->getWidget() instanceof sfWidgetFormDate
+      ||
+      $this->getField()->getWidget() instanceof sfWidgetFormDateTime
+    )
     {
       return $this->_generatesfWidgetFormDateRules();
     }
     else
     {
-
+      return $this->_generateGenericWidgetRules();
     }
   }
 
+  /**
+   * Generates the rules for a sfWidgetFormDate or a sfWidgetFormDateTime
+   *
+   * @return  void
+   */
   protected function _generatesfWidgetFormDateRules()
   {
     $widget = $this->getField()->getWidget();
 
-    if (!$widget instanceof sfWidgetFormDate)
+    if (
+      !$widget instanceof sfWidgetFormDate
+      &&
+      !$widget instanceof sfWidgetFormDateTime
+    )
     {
-      throw new Exception('Widget must be an instance of sfWidgetFormDate');
+      throw new Exception(
+        'Widget must be an instance of sfWidgetFormDate or sfWidgetFormDateTime'
+      );
     }
 
     $validatorRules = array();
@@ -61,7 +76,7 @@ class sfJqueryValidationParsersfValidatorDate
       $this->getValidator()->getOption('required')
     )
     {
-      $validatorRules['requiredArrayDate'] = new sfJqueryValidationValidatorRule(
+      $validatorRules['required'] = new sfJqueryValidationValidatorRule(
         'true',
         $this->getValidator()->getMessage('required')
       );
@@ -157,10 +172,92 @@ class sfJqueryValidationParsersfValidatorDate
 
       $groups[] = $fieldName;
 
-      //$this->setRulesByName($validatorRules, $fieldName);
+      $this->setRulesByName($validatorRules, $fieldName);
     }
 
-    //$this->setGroup($this->getName(), $groups);
+    $this->setGroup($this->getName(), $groups);
 
+  }
+
+  /**
+   * Generates generic rules for a date (expecting a single field like a input
+   * text)
+   *
+   * @return  void
+   */
+  protected function _generateGenericWidgetRules()
+  {
+    parent::_generateRules();
+    $this->addRule('date', new sfJqueryValidationValidatorRule(
+      'true', $this->getValidator()->getMessage('invalid')
+    ));
+
+    // max date
+    if ($this->getValidator()->getOption('max'))
+    {
+      $max = $this->getValidator()->getOption('max');
+
+      if (is_numeric($max))
+      {
+        $errorMessage = strtr($this->getValidator()->getMessage('max'), array(
+          '%max%' =>  date(
+            $this->getValidator()->getOption('date_format_range_error'),
+            $max
+          )
+        ));
+
+        $this->addRule('maxDate', new sfJqueryValidationValidatorRule(
+          $max, $errorMessage
+        ));
+      }
+      else
+      {
+        $dateMax = new DateTime($max);
+
+        $errorMessage = strtr($this->getValidator()->getMessage('max'), array(
+          '%max%' =>  $dateMax->format(
+            $this->getValidator()->getOption('date_format_range_error')
+          )
+        ));
+
+        $this->addRule('maxDate', new sfJqueryValidationValidatorRule(
+          $dateMax->format('U'), $errorMessage
+        ));
+      }
+    }
+
+    // min date
+    if ($this->getValidator()->getOption('min'))
+    {
+      $min = $this->getValidator()->getOption('min');
+
+      if (is_numeric($min))
+      {
+        $errorMessage = strtr($this->getValidator()->getMessage('min'), array(
+          '%min%' =>  date(
+            $this->getValidator()->getOption('date_format_range_error'),
+            $min
+          )
+        ));
+
+        $this->addRule('minDate', new sfJqueryValidationValidatorRule(
+          $min, $errorMessage
+        ));
+      }
+      else
+      {
+        $dateMin = new DateTime($min);
+
+        $errorMessage = strtr($this->getValidator()->getMessage('min'), array(
+          '%min%' =>  $dateMin->format(
+            $this->getValidator()->getOption('date_format_range_error')
+          )
+        ));
+
+        $this->addRule('maxDate', new sfJqueryValidationValidatorRule(
+          $dateMin->format('U'), $errorMessage
+        ));
+      }
+    }
   }
 }
