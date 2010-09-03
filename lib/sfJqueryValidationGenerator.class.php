@@ -431,7 +431,9 @@ EOF;
           !$validatorSchema[$name] instanceof sfValidatorSchema
         )
         {
-          throw new Exception('Validator isn\'t an instance of sfValidatorSchema');
+          // field can exist without a validator
+          continue;
+          //throw new Exception('Validator isn\'t an instance of sfValidatorSchema');
         }
 
         $this->_recursiveGenerateFieldsAndValidator(
@@ -447,7 +449,9 @@ EOF;
         !$validatorSchema[$name] instanceof sfValidatorBase
       )
       {
-        throw new Exception('Validation isn\'t an instance of sfValidatorBase');
+        // field can exist without a validator
+        continue;
+        //throw new Exception('Validation isn\'t an instance of sfValidatorBase');
       }
 
       $factory = new sfJqueryValidationValidatorParserFactory(
