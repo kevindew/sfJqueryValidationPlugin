@@ -36,9 +36,29 @@ class sfJqueryValidationValidatorParserFactory
    *
    * @var array
    */
-  protected $_parserClassPrefixes = array(
-      'sfJqueryValidationParser'
+  protected static $_parserClassPrefixes = array(
+    'sfJqueryValidationParser'
   );
+
+  /**
+   * @see     self::$_parserClassPrefixes
+   * @param   array $parserClassPrefixes
+   * @return  void
+   */
+  public static function setParserClassPrefixes(array $parserClassPrefixes)
+  {
+    self::$_parserClassPrefixes = $parserClassPrefixes;
+  }
+
+  /**
+   * @see     self::$_parserClassPrefixes
+   * @return  array
+   */
+  public static function getParserClassPrefixes()
+  {
+    return self::$_parserClassPrefixes;
+  }
+
 
   /**
    * @param   string          $name
@@ -113,26 +133,6 @@ class sfJqueryValidationValidatorParserFactory
   }
 
   /**
-   * @see     self::$_parserClassPrefixes
-   * @param   array $parserClassPrefixes
-   * @return  self
-   */
-  public function setParserClassPrefixes(array $parserClassPrefixes)
-  {
-    $this->_parserClassPrefixes = $parserClassPrefixes;
-    return $this;
-  }  
-
-  /**
-   * @see     self::$_parserClassPrefixes
-   * @return  array
-   */
-  public function getParserClassPrefixes()
-  {
-    return $this->_parserClassPrefixes();
-  }
-
-  /**
    * Get the parser class for the validator
    *
    * @return  mixed
@@ -174,9 +174,8 @@ class sfJqueryValidationValidatorParserFactory
    */
   protected function _checkParserClass($validatorClass)
   {
-    foreach ($this->_parserClassPrefixes as $prefix)
+    foreach ($this->getParserClassPrefixes() as $prefix)
     {
-
       // should probably use a interface too
       if (class_exists($prefix . $validatorClass))
       {
