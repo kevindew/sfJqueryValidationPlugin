@@ -2,7 +2,7 @@
 /**
  * sfJqueryValidationGenerator
  *
- * Takes a form and generates validation for it
+ * Takes a form and generates validation rules for jQuery Validation from it
  *
  * @package     sfJqueryValidationPlugin
  * @subpackage  Generator
@@ -113,11 +113,14 @@ class sfJqueryValidationGenerator
     $_invalidHandlerCallbackTemplate = 'function(form, validator) {%callback%}',
     $_showErrorsCallbackTemplate = 'function(errorMap, errorList) {%callback%}',
     $_errorPlacementCallbackTemplate = 'function(error, element) {%callback%}',
-    $_highlightCallbackTemplate = 'function(element, errorClass, validClass) {%callback%}',
-    $_unhighlightCallbackTemplate = 'function(element, errorClass, validClass) {%callback%}'
+    $_highlightCallbackTemplate
+      = 'function(element, errorClass, validClass) {%callback%}',
+    $_unhighlightCallbackTemplate
+      = 'function(element, errorClass, validClass) {%callback%}'
   ;
 
   /**
+   * Constructor
    *
    * @param sfFormJqueryValidationInterface $form
    */
@@ -433,7 +436,6 @@ EOF;
         {
           // field can exist without a validator
           continue;
-          //throw new Exception('Validator isn\'t an instance of sfValidatorSchema');
         }
 
         $this->_recursiveGenerateFieldsAndValidator(
@@ -451,7 +453,6 @@ EOF;
       {
         // field can exist without a validator
         continue;
-        //throw new Exception('Validation isn\'t an instance of sfValidatorBase');
       }
 
       $factory = new sfJqueryValidationValidatorParserFactory(
