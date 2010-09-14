@@ -51,8 +51,6 @@ class BasesfJqueryValidationActions extends sfActions
 
     $javascript = $form->getJqueryValidationGenerator()->generateJavascript();
 
-    $javascript = sfJqueryValidationUtility::minify($javascript);
-
-    return $this->renderText($javascript);
+    $this->javascript = sfJqueryValidationUtility::minify($javascript);
   }
 }
