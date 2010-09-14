@@ -1,4 +1,4 @@
-/**
+  /**
  * Extensions to jquery.validation
  *
  *
@@ -160,7 +160,8 @@
    */
   $.validator.addMethod(
     'validArrayDate',
-    function(value, element, required) {
+    function(value, element, valid) {
+
       return this.optional(element)
         || $.validator.sfJqueryValidationPlugin.buildArrayDate.call(this, element)
       ;
@@ -221,12 +222,13 @@
           this, element
         );
 
-        if (date === false) {
-          return false;
+        if (date !== false && typeof date != 'object') {
+          throw "Date not returned"
         }
 
-        if (typeof date != 'object') {
-          throw "Date not returned"
+
+        if (date === false) {
+          return false;
         }
 
         var checkDate = new Date(timestamp * 1000);
@@ -239,6 +241,21 @@
       }
     },
     'Please select an earlier date.'
+  );
+
+  /**
+   * Validate if an array time is correct
+   */
+  $.validator.addMethod(
+    'validArrayTime',
+    function(value, element, valid) {
+
+      return this.optional(element)
+        || $.validator.sfJqueryValidationPlugin.buildArrayTime.call(this, element)
+      ;
+
+    },
+    'Invalid.'
   );
 
   /**
@@ -378,6 +395,21 @@
 
       // only check a field that exists
       if (fields[fieldNames[i]].length) {
+
+        // set on change events
+        fields[fieldNames[i]]
+          .unbind(
+            'keyup.jquery-validate-date-' + $(element).attr('id')
+            + ' click.jquery-validate-date-' + $(element).attr('id')
+          )
+          .bind(
+            'keyup.jquery-validate-date-' + $(element).attr('id')
+            + ' click.jquery-validate-date-' + $(element).attr('id')
+          , function() {
+            $(element).valid();
+          })
+        ;
+
         var value = fields[fieldNames[i]].val();
 
         if (value !== '') {
@@ -439,10 +471,89 @@
       return date;
 
     } catch (error) {
-      console.log(error);
+      return "pending";
+    }
+  }
+
+  $.validator.sfJqueryValidationPlugin.buildArrayTime = function (element) {
+
+    var
+      name = $(element).attr('name'),
+      fieldNames = ['hour', 'minute', 'second'],
+      form = $(element).parents('form').first(),
+      fields = {},
+      allBlank = true,
+      allFilled = true,
+      returnError = true,
+      i
+    ;
+
+    $(element).data('checkedsfJqueryValidationTime', true);
+
+    // need to strip the date part of the array off
+    name = name.replace(/\[(hour|minute|second)\]/, '');
+
+    // loop through the fields, put them into an object and do some preliminary
+    // checks
+    for (i = 0; i < fieldNames.length; i++) {
+      fields[fieldNames[i]]
+        = $('[name="' + name + '[' + fieldNames[i] + ']"]', form).first()
+      ;
+
+      // only check a field that exists
+      if (fields[fieldNames[i]].length) {
+
+        // set on change events
+        fields[fieldNames[i]]
+          .unbind(
+            'keyup.jquery-validate-time-' + $(element).attr('id')
+            + ' click.jquery-validate-time-' + $(element).attr('id')
+          )
+          .bind(
+            'keyup.jquery-validate-time-' + $(element).attr('id')
+            + ' click.jquery-validate-time-' + $(element).attr('id')
+          , function() {
+            $(element).valid();
+          })
+        ;
+
+        var value = fields[fieldNames[i]].val();
+
+        if (value !== '') {
+          allBlank = false;
+        }
+
+        // we're assuming the second field isn't required
+        if (fieldNames[i] != 'second') {
+          if (value === '') {
+            allFilled = false;
+          }
+
+          if (!(
+            fields[fieldNames[i]].data('checkedsfJqueryValidationTime')
+            &&
+            (value === '' && !this.optional(fields[fieldNames[i]].get(0)))
+          )) {
+            returnError = false;
+          }
+        }
+      }
+    }
+
+    // return pending because this condition requires other fields to change
+    if (
+      allBlank
+      ||
+      !allFilled && !returnError
+    ) {
       return "pending";
     }
 
+    if (!allFilled) {
+      return false;
+    }
 
+    return true
   }
+
 })(jQuery);
