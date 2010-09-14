@@ -154,15 +154,8 @@ class sfJqueryValidationParsersfValidatorDate
 
     // types to use
     $types = array(
-      'month', 'day', 'year'
+      'month', 'day', 'year', 'hour', 'minute', 'second'
     );
-
-    if ($this->getValidator()->getOption('with_time'))
-    {
-      $types = array_merge($types, array(
-         'hour', 'minute', 'second'
-      ));
-    }
 
 
     // set groups and validation rules
