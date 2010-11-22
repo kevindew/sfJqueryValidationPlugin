@@ -1,3 +1,8 @@
 sfJqueryValidationPlugin By Kevin Dew <kev@dewsolutions.co.uk>
+==============================================================
 
-Still a lot to do...
+Setting Up
+----------
+1. Set your BaseForm to extend sfFormJqueryValidationForm (or if you want the
+   extras sfFormJqueryValidationFormExtended)
+2. Set up widget form schema

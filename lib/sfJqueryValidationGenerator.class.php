@@ -442,6 +442,8 @@ EOF;
           $field,
           $validatorSchema[$name]
         );
+
+        // handle pre and post validators connected to validation schema
       }
 
       // check validator
@@ -482,6 +484,18 @@ EOF;
         array_merge($this->getStylesheets(), $parser->getStylesheets())
       );
     } // end foreach
+
+    if ($validatorSchema->getPostValidator())
+    {
+      // handle main pre post validators
+      $factory = new sfJqueryValidationValidatorParserFactoryPostValidator(
+        $formFieldSchema, $validatorSchema->getPostValidator()
+      );
+
+      $parser = $factory->getParser();
+    }
+
+
   }
 
   /**

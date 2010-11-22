@@ -143,7 +143,7 @@ class sfJqueryValidationValidatorParserFactory
 
     $parserClass = false;
 
-    while ($validatorClass)
+    while($validatorClass)
     {
       $parserClass = $this->_checkParserClass($validatorClass);
       if ($parserClass)
