@@ -14,7 +14,7 @@ class sfFormJqueryValidation
 
   protected
     // error message
-    $globalErrorMessage = 'This form contains errors',
+    $globalErrorMessage = '',
     // whether to append error class server side
     $useFieldErrorClassServerSide = true,
     // whether to append valid class server side
@@ -34,9 +34,18 @@ class sfFormJqueryValidation
    */
   public function __construct($defaults = array(), $options = array(), $CSRFSecret = null)
   {
+    $this->setGlobalErrorMessage(
+      sfConfig::get(
+        'app_sfJqueryValidationPlugin_default_global_error_message',
+        ''
+      )
+    );
+
     parent::__construct($defaults, $options, $CSRFSecret);
 
     $this->setUseJqueryValidation(
+      sfConfig::get('app_sfJqueryValidationPlugin_enabled', true)
+      &&
       sfConfig::get('app_sfJqueryValidationPlugin_jquery_validation_by_default')
     );
 
@@ -76,7 +85,7 @@ class sfFormJqueryValidation
    */
   public function setGlobalErrorMessage($globalErrorMessage)
   {
-    $this->globalErrorErrorMessage = $globalErrorMessage;
+    $this->globalErrorMessage = $globalErrorMessage;
     
     return $this;
   }
@@ -221,12 +230,7 @@ class sfFormJqueryValidation
    */
   public function getValidationScriptPath()
   {
-    sfContext::getInstance()->getConfiguration()->loadHelpers('url');
-
-    $this->rewind();
-
-    return url_for(
-      '@'
+    $urlString = '@'
       . sfConfig::get(
         'app_sfJqueryValidationPlugin_route', 'sfJqueryValidation'
       )
@@ -234,10 +238,15 @@ class sfFormJqueryValidation
       . '&name_format=' . $this->getWidgetSchema()->getNameFormat()
       . '&id_format=' . $this->getWidgetSchema()->getIdFormat()
       . (sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
-        ? '&asset-version=' . sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
+        ? '&asset-version='
+          . sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
         : ''
       )
-    );
+    ;
+
+    $controller = sfContext::getInstance()->getController();
+
+    return $controller->genUrl($urlString);
   }
 
 
@@ -254,9 +263,9 @@ class sfFormJqueryValidation
     }
 
     return array_merge(
-      parent::getJavaScripts(),
       array($this->getValidationScriptPath()),
-      $this->getJqueryValidationGenerator()->getJavascripts()
+      $this->getJqueryValidationGenerator()->getJavascripts(),
+      parent::getJavaScripts()
     );
   }
 
@@ -273,8 +282,8 @@ class sfFormJqueryValidation
     }    
 
     return array_merge(
-      parent::getStylesheets(),
-      $this->getJqueryValidationGenerator()->getStylesheets()
+      $this->getJqueryValidationGenerator()->getStylesheets(),
+      parent::getStylesheets()
     );
   }
 
