@@ -18,7 +18,7 @@ class sfWidgetFormSchemaFormatterJqueryValidation
                               <div class=\"fields\">
                               %field%\n %hidden_fields%
                               </div>\n
-                              <div class=\"clear error-hook\"></div>\n
+                              <div class=\"error-hook\"></div>\n
                               %error%
                               %help%\n</div>\n",
     $errorRowFormat        = "<div class=\"form-global-errors\">\n
@@ -30,10 +30,12 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     $namedErrorRowFormatInARow
                            = "    <li class=\"error\">%name%: %error%</li>\n",
     $rowErrorClass         = '',
-    $requiredFormat        = '<span class="required">*</span>',
+    $requiredFormat        = '<span class="required" title="Required">*</span>',
     $decoratorFormat       = "<div class=\"form-decorator\">\n%content%</div>",
     $form                  = null,
     $markRequired          = true,
+    $useLabelForAsClassesInFormRow
+                           = true,
     $globalErrorFormat     = "<div class=\"global-error\">\n%error%\n</div>",
     $fieldErrorClass       = 'error',
     $fieldValidClass       = 'valid',
@@ -44,9 +46,14 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     $jqueryValidationErrorContainer
                           = "",
     $jqueryValidationSubmitHandlerCallback
-                          = "",
+                          = "
+      $(form).find('.form-global-errors').hide();
+      form.submit();
+    ",
     $jqueryValidationInvalidHandlerCallback
-                          = "",
+                          = "
+      $(this).find('.form-global-errors').hide();
+    ",
     $jqueryValidationErrorPlacementCallback
                           = "
       element.parents('.fields').first().nextAll('.error-hook').first().after(error);
@@ -56,22 +63,26 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     $jqueryValidationHighlightCallback
                           = "
       // get rid of existing sf errors
-      $(element).parent().nextAll('.sf-errors').remove();
+      $(element).parents('.fields').first().nextAll('.sf-errors').remove();
       $(element).removeClass(validClass).addClass(errorClass);
+      $(element).parents('.fields').first().nextAll('.form-errors').show();
     ",
     $jqueryValidationUnhighlightCallback
                           = "
       // get rid of existing sf errors
-      $(element).parent().nextAll('.sf-errors').remove();
+      $(element).parents('.fields').first().nextAll('.sf-errors').remove();
       $(element).removeClass(errorClass).addClass(validClass);
+      $(element).parents('.fields').first().nextAll('.form-errors').hide();
     "
   ;
   
   /**
    * @see parent
    */
-  public function formatRow($label, $field, $errors = array(), $help = '', $hiddenFields = null)
-  { 
+  public function formatRow(
+    $label, $field, $errors = array(), $help = '', $hiddenFields = null
+  )
+  {
     $row = parent::formatRow(
       $label,
       $field,
@@ -80,8 +91,37 @@ class sfWidgetFormSchemaFormatterJqueryValidation
       $hiddenFields
     );
 
+    $rowClasses = array();
+
+    if ((count($errors) > 0) && $this->rowErrorClass)
+    {
+      $rowClasses[] = $this->rowErrorClass;
+    }
+
+
+    if ($this->useLabelForAsClassesInFormRow)
+    {
+      // try match the field id and classes to add as a class to the row as a way
+      // to target the field
+      
+      preg_match_all(
+        '/for=(\'|")([\w]*)(\'|")/', $label, $matches, PREG_SET_ORDER
+      );
+
+      if ($matches)
+      {
+        foreach ($matches as $match)
+        {
+          $rowClasses[] = $match[2];
+        }
+      }
+    }
+
     return strtr($row, array(
-      '%row_class%' => (count($errors) > 0) ? ' ' . $this->rowErrorClass : '',
+      '%row_class%' => (count($rowClasses)
+        ? ' ' . implode(', ', array_unique($rowClasses))
+        : ''
+      ),
     ));
   }
 
@@ -232,7 +272,6 @@ class sfWidgetFormSchemaFormatterJqueryValidation
     }
 
     return '';
-
   }
 
   public function setGlobalErrorFormat($globalErrorFormat)
