@@ -47,8 +47,13 @@ class sfJqueryValidationUtility
     {
       $lifetime = $max_age * 86400; // 24*60*60
       $response->addCacheControlHttpHeader('max-age', $lifetime);
-      $response->setHttpHeader('Pragma', null, false);
-      $response->setHttpHeader('Expires', null, false);
+      $response->setHttpHeader(
+        'Pragma',
+        sfConfig::get('app_sfJqueryValidationPlugin_pragma_header', 'public')
+      );
+      $response->setHttpHeader(
+        'Expires', $response->getDate(time() + $lifetime)
+      );
     }
   }
 
