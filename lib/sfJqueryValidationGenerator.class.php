@@ -196,6 +196,11 @@ class sfJqueryValidationGenerator
   $(document).ready(function() {
     var validator = $('#%form_accessor_id%')
       .parents('form').first()
+      .submit(function() {
+        if (typeof tinyMCE == 'object') {
+          tinyMCE.triggerSave();
+        }
+      })
       .validate(%options%)
     ;
 

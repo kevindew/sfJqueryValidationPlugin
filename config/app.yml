@@ -2,14 +2,19 @@
 
 default:
   sfJqueryValidationPlugin:
-    enabled:        true          # enabling the plugin will combine script and css files into a single file
-    asset_version:  5             # key to the asset version
-    client_cache_max_age: 10      # enable the browser to keep a copy of the files for x days (false to disable)
-    gzip:           true          # allow PHP gzipping of the javascript
-    route: sfJqueryValidation     # the route name
-    jquery_validation_by_default: true
-    minify:       true            # process js files to shrink them
-    minify_method: []
-    minify_method_options: []
+    enabled:              true                # enabling the plugin will combine script and css files into a single file
+    asset_version:        5                   # key to the asset version
+    client_cache_max_age: 10                  # enable the browser to keep a copy of the files for x days (false to disable)
+    pragma_header:        public              # when sending cache headers sets the pragma header
+    gzip:                 true                # allow PHP gzipping of the javascript
+    route:                sfJqueryValidation  # the route name
+    jquery_validation_by_default:
+                          true
+    default_global_error_message:
+                          ''
+    minify:               false               # process js files to shrink them
+    minify_method:        []
+    minify_method_options:
+                          []
     jquery_validation_script:
-      http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.js
+                          http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.min.js

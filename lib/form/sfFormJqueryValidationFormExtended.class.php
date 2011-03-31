@@ -31,8 +31,10 @@ class sfFormJqueryValidationFormExtended
 
   /**
    * Method to ensure form CSRF protection doesn't happen again and again
-   * 
-   * @see parent
+   *
+   * @todo  FIXME!
+   *
+   * @see   parent
    */
   protected function doBind(array $values)
   {
@@ -53,5 +55,22 @@ class sfFormJqueryValidationFormExtended
     {
       $this->taintedValues[self::$CSRFFieldName] = $this->getCSRFToken();
     }
+  }
+
+
+  /**
+   * Format the global errors for the form
+   *
+   * Uses the formatErrorRow method on the form formatter rather than
+   * formatErrorsForRow which is what it uses by default and is inconsistent
+   * with echoing just a form
+   *
+   * @return string
+   */
+  public function renderGlobalErrors()
+  {
+    return $this->widgetSchema->getFormFormatter()->formatErrorRow(
+      $this->getGlobalErrors()
+    );
   }
 }
