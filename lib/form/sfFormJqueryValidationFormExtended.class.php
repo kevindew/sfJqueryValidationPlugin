@@ -34,11 +34,11 @@ class sfFormJqueryValidationFormExtended
    * 
    * @see parent
    */
-  public function bind(array $taintedValues = null, array $taintedFiles = null)
+  protected function doBind(array $values)
   {
-    parent::bind($taintedValues, $taintedFiles);
-
     $this->_resetCSRFProtection();
+    parent::doBind($values);
+
   }
 
   /**
