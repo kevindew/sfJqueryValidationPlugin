@@ -20,12 +20,15 @@ class sfFormJqueryValidationFormExtended
   {
     parent::addCSRFProtection($secret);
 
-    $this->getWidget(self::$CSRFFieldName)->setLabel('Session Error');
+    if ($this->isCSRFProtected())
+    {
+      $this->getWidget(self::$CSRFFieldName)->setLabel('Session Error');
 
-    $this->getValidator(self::$CSRFFieldName)->setMessage(
-      'csrf_attack',
-      'This session has expired. Please try again and ensure cookies are enabled'
-    );
+      $this->getValidator(self::$CSRFFieldName)->setMessage(
+        'csrf_attack',
+        'This session has expired. Please try again and ensure cookies are enabled'
+      );
+    }
 
   }
 
