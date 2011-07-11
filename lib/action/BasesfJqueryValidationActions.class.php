@@ -46,8 +46,8 @@ class BasesfJqueryValidationActions extends sfActions
       throw new Exception('Requested class does not inherit from sfForm');
     }
 
-    $form->getWidgetSchema()->setNameFormat($request->getParameter('name_format'));
-    $form->getWidgetSchema()->setIdFormat($request->getParameter('id_format'));
+    $form->getWidgetSchema()->setNameFormat(base64_decode($request->getParameter('name_format')));
+    $form->getWidgetSchema()->setIdFormat(base64_decode($request->getParameter('id_format')));
 
     $javascript = $form->getJqueryValidationGenerator()->generateJavascript();
 
