@@ -235,8 +235,8 @@ class sfFormJqueryValidation
         'app_sfJqueryValidationPlugin_route', 'sfJqueryValidation'
       )
       . '?form=' . get_class($this)
-      . '&name_format=' . $this->getWidgetSchema()->getNameFormat()
-      . '&id_format=' . $this->getWidgetSchema()->getIdFormat()
+      . '&name_format=' . base64_encode($this->getWidgetSchema()->getNameFormat())
+      . '&id_format=' . base64_encode($this->getWidgetSchema()->getIdFormat())
       . (sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
         ? '&asset-version='
           . sfConfig::get('app_sfJqueryValidationPlugin_asset_version')
